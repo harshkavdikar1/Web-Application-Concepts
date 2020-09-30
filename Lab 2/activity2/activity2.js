@@ -16,7 +16,9 @@ http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
     let endPoint = requestURL.pathname;
 
-    if (endPoint == "/")
+    let cookies = readCookies(req);
+
+    if (endPoint == "/" || cookies == {} || cookies.loggedin == false)
         serveHomePage(req, res);
 
     else if (endPoint == "/login")
@@ -91,6 +93,7 @@ function validateLogin(req, res) {
         let reqObj = qstring.parse(jsonData);
         if (reqObj.userName == "harsh" && reqObj.password == "hk") {
             res.writeHead(301, {
+                "Set-Cookie" : ['username='+reqObj.userName, 'role='+reqObj.role, 'loggedin=true'],
                 Location: "/news"
             });
             res.end();
@@ -164,10 +167,10 @@ function viewNews(req, res, id, err="") {
     let role = "author"
 
     if (role == "guest" && story.publicFlag == "private")
-        error401(res)
+        error403(res)
 
     else if (role == "author" && story.author != userName)
-        error401(res)
+        error403(res)
 
     if (userName == story.author && role == "author")
         deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
@@ -212,6 +215,11 @@ function create(req, res, err = "") {
 
     if (req.method != "GET")
         error405(req, res)
+
+    let role = "guest"
+
+    if (role != "guest")
+        error403(res)
 
     res.writeHead(200, {
         "Content-Type": "text/html",
@@ -279,6 +287,23 @@ function logoutUser(req, res) {
     });
     res.end();
 }
+
+function readCookies(req) {
+    let cookies = {}
+    let requestCookies = req.headers.cookie
+    
+    if (requestCookies != undefined){
+        requestCookies = requestCookies.split(";");
+
+        for (requstCookie of requestCookies) {
+            cookieDetails = requestCookie.split("=");
+            cookies[cookieDetails[0].trim()] = cookieDetails[1]
+        }
+    }
+      
+    return cookies;
+}
+
 
 function error404(res) {
     res.writeHead(404, {
