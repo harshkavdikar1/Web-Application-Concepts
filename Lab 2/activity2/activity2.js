@@ -24,9 +24,12 @@ http.createServer(function (req, res) {
     
     else if (endPoint == "/logout")
         logoutUser(req, res);
-
+    
     else if (endPoint == "/news")
-        viewNews(req, res);
+        viewAllNews(req, res);
+
+    else if (endPoint == "/news/")
+        handleNewsRequest(req, res);
 
     else {
         res.writeHead(405, {
@@ -119,7 +122,7 @@ function getNews(userName, role) {
         else if (role == "Subscriber") {
             stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
         }
-        else if (role == "Guest") {
+        else if (role == "Author") {
             if (story.publicFlag == "public" || story.author == userName)
                 stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
             else
@@ -129,29 +132,42 @@ function getNews(userName, role) {
     return stories
 }
 
-function viewNews(req, res) {
-    if (req.method != "GET")
-        error405(res);
+function viewAllNews(req, res) {
 
     res.writeHead(200, {
         "Content-Type": "text/html"
     });
 
     let userName = "Harsh";
-    let role = "Subscriber";
+    let role = "Author";
+    let createNewsButton = "</br></br></br>"
+    if (role == "Author")
+        createNewsButton = '<a href = "/create">Create News</a>' + createNewsButton
 
     res.end (
         `
             <!DOCTYPE html>
             <title> Latest News </title>
             UserName: ${userName} </br>
-            Role: ${role} </br></br></br>
+            Role: ${role} </br>
+            ${createNewsButton}
             ${getNews(userName, role)}
             </br></br></br>
             <a href="/logout">Logout</a>
         `
     );
 }
+
+function handleNewsRequest(req, res) {
+    if (req.method == "GET")
+        viewNews(req, res);
+    else if (req.method == "POSt")
+        createNews(req, res);
+    else if (req.method == "DELETE")
+        deleteNews(req, res)
+    error405(res)
+}
+
 
 function inavlidCredentials(res) {
     res.end (
