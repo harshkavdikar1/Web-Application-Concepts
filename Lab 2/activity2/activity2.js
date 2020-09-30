@@ -16,13 +16,17 @@ http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
     let endPoint = requestURL.pathname;
 
-    let cookies = readCookies(req);
+    // let cookies = readCookies(req);
+    // console.log(cookies, endPoint)
 
-    if (endPoint == "/" || cookies == {} || cookies.loggedin == false)
+    if (endPoint == "/")
         serveHomePage(req, res);
 
+    // else if (cookies == {} || cookies.loggedin == "false")
+    //     rediectHomePage(res);
+
     else if (endPoint == "/login")
-        validateLogin(req, res);
+        login(req, res);
 
     else if (endPoint == "/logout")
         logoutUser(req, res);
@@ -80,7 +84,7 @@ function serveHomePage(req, res) {
 }
 
 
-function validateLogin(req, res) {
+function login(req, res) {
     if (req.method != "POST")
         error405(req, res);
 
@@ -93,7 +97,7 @@ function validateLogin(req, res) {
         let reqObj = qstring.parse(jsonData);
         if (reqObj.userName == "harsh" && reqObj.password == "hk") {
             res.writeHead(301, {
-                "Set-Cookie" : ['username='+reqObj.userName, 'role='+reqObj.role, 'loggedin=true'],
+                "Set-Cookie" : ['userName=' + reqObj.userName, 'role=' + reqObj.role, 'loggedin=true'],
                 Location: "/news"
             });
             res.end();
@@ -108,16 +112,16 @@ function getNews(userName, role) {
     let stories = ""
 
     for (story of newsStories) {
-        if (role == "Guest") {
+        if (role == "guest") {
             if (story.publicFlag == "public")
                 stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
             else
                 stories += story.title + '</br>'
         }
-        else if (role == "Subscriber") {
+        else if (role == "subscriber") {
             stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
         }
-        else if (role == "Author") {
+        else if (role == "author") {
             if (story.publicFlag == "public" || story.author == userName)
                 stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
             else
@@ -128,9 +132,14 @@ function getNews(userName, role) {
 }
 
 function viewAllNews(req, res) {
+    
+    let cookies = readCookies(req);
 
-    let userName = "Harsh";
-    let role = "Author";
+    validateLogin(res, cookies);
+
+    let userName = cookies.userName;
+    let role = cookies.role;
+
     let createNewsButton = "</br></br></br>"
     if (role == "Author")
         createNewsButton = '<a href = "/createnews">Create News</a>' + createNewsButton
@@ -143,7 +152,7 @@ function viewAllNews(req, res) {
         `
             <!DOCTYPE html>
             <title> Latest News </title>
-            UserName: ${userName} </br>
+            User Name: ${userName} </br>
             Role: ${role} </br>
             ${createNewsButton}
             ${getNews(userName, role)}
@@ -157,38 +166,58 @@ function viewNews(req, res, id, err="") {
     if (req.method != "GET")
         error405(req, res)
 
+    let cookies = readCookies(req);
+
+    validateLogin(res, cookies);
+
+    let userName = cookies.userName;
+    let role = cookies.role;
+
     if (id in newsService.NewsStories == false)
         error404(res)
+    else {
+        let story = newsService.NewsStories[id]
+        let deleteButton = ""
 
-    let story = newsService.NewsStories[id]
-    let deleteButton = ""
+        if (role == "guest" && story.publicFlag == "private")
+            error403(res)
 
-    let userName = "Author1"
-    let role = "author"
+        else if (role == "author" && story.publicFlag == "private" && story.author != userName)
+            error403(res)
 
-    if (role == "guest" && story.publicFlag == "private")
-        error403(res)
-
-    else if (role == "author" && story.author != userName)
-        error403(res)
-
-    if (userName == story.author && role == "author")
-        deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
-    res.end(
-        `
-            <!DOCTYPE html>
-            ${err} </br>
-            <b> Title : </b> ${story.title} </br>
-            <b> Author : </b> ${story.author} </br>
-            <b> Content : </b> ${story.storyContent} </br>
-            <b> Publication Date : </b> ${story.date} </br>
-            <b> Content Visibility : </b> ${story.publicFlag} </br>
-            ${deleteButton}
-        `
-    )
+        if (userName == story.author && role == "author")
+            deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
+        res.end(
+            `
+                <!DOCTYPE html>
+                User Name: ${userName} </br>
+                Role: ${role} </br></br></br></br>
+                ${err} </br>
+                <b> Title : </b> ${story.title} </br>
+                <b> Author : </b> ${story.author} </br>
+                <b> Content : </b> ${story.storyContent} </br>
+                <b> Publication Date : </b> ${story.date} </br>
+                <b> Content Visibility : </b> ${story.publicFlag} </br>
+                ${deleteButton}
+                </br></br></br>
+                <a href="/logout">Logout</a>
+            `
+        )
+    }
 }
 
 function createNews(req, res) {
+
+    let cookies = readCookies(req);
+
+    validateLogin(res, cookies);
+
+    let userName = cookies.userName;
+    let role = cookies.role;
+
+    if (role != "author")
+        error403(res)
+
     let jsonData = "";
     req.on('data', function (chunk) {
         jsonData += chunk;
@@ -282,7 +311,14 @@ function deleteNews(req, res, id) {
 }
 
 function logoutUser(req, res) {
-    res.writeHead(301, {
+    if (req.method != "GET")
+        error405(req, res)
+
+    let cookies = readCookies(req);
+
+    res.writeHead(307, {
+        "Content-Type": "text/html",
+        "Set-Cookie" : ['userName=' + cookies.userName, 'role=' + cookies.role, 'loggedin=false'],
         Location: "/"
     });
     res.end();
@@ -295,13 +331,22 @@ function readCookies(req) {
     if (requestCookies != undefined){
         requestCookies = requestCookies.split(";");
 
-        for (requstCookie of requestCookies) {
-            cookieDetails = requestCookie.split("=");
+        for (requestCookie of requestCookies) {
+            let cookieDetails = requestCookie.split("=");
             cookies[cookieDetails[0].trim()] = cookieDetails[1]
         }
     }
       
     return cookies;
+}
+
+function validateLogin(res, cookies) {
+    if (!Object.keys(cookies).length || cookies.loggedin == "false") {
+        res.writeHead(307, {
+            Location: "/"
+        });
+        res.end();
+    }
 }
 
 
@@ -313,7 +358,7 @@ function error404(res) {
     res.end(
         `
             <!DOCTYPE html>
-            Error : 404
+            Error : 404 </br>
             Message : Resource Not Found
         `
     )
