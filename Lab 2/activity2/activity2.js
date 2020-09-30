@@ -16,14 +16,8 @@ http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
     let endPoint = requestURL.pathname;
 
-    // let cookies = readCookies(req);
-    // console.log(cookies, endPoint)
-
     if (endPoint == "/")
         serveHomePage(req, res);
-
-    // else if (cookies == {} || cookies.loggedin == "false")
-    //     rediectHomePage(res);
 
     else if (endPoint == "/login")
         login(req, res);
@@ -141,7 +135,7 @@ function viewAllNews(req, res) {
     let role = cookies.role;
 
     let createNewsButton = "</br></br></br>"
-    if (role == "Author")
+    if (role == "author")
         createNewsButton = '<a href = "/createnews">Create News</a>' + createNewsButton
 
     res.writeHead(200, {
@@ -229,27 +223,35 @@ function createNews(req, res) {
             newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
         }
         catch (err) {
-            create(req, res, err = "Error : 500 Unable to create the story due to some internal issue please try again")
+            renderCreateNews(res, reqObj.author, err = "Error : 500 Unable to create the story due to some internal issue please try again")
         }
         res.writeHead(301, {
             Location: "/news"
         })
-
         res.end()
     });
 }
 
 
-function create(req, res, err = "") {
+function create(req, res) {
 
     if (req.method != "GET")
         error405(req, res)
+    
+    let cookies = readCookies(req);
 
-    let role = "guest"
+    validateLogin(res, cookies);
 
-    if (role != "guest")
+    let userName = cookies.userName;
+    let role = cookies.role;
+
+    if (role != "author")
         error403(res)
 
+    renderCreateNews(res, userName)
+}
+
+function renderCreateNews(res, userName, err="") {
     res.writeHead(200, {
         "Content-Type": "text/html",
     });
@@ -259,7 +261,7 @@ function create(req, res, err = "") {
             ${err}
             <form action = "/news" method = "POST">
                 <label for="author">Author : </label>
-                <input type="text" name="author" required><br/><br/>
+                <input type="text" name="author" value=${userName} required><br/><br/>
                 <label for="title">Title : </label>
                 <input type="text" name="title" required><br/><br/>
                 <label for="storyContent">Story Content : </label>
@@ -276,11 +278,24 @@ function create(req, res, err = "") {
             </form>
         `
     )
+
 }
+
 
 function deleteNews(req, res, id) {
     if (req.method != "GET")
         error405(req, res)
+
+    let cookies = readCookies(req);
+
+    validateLogin(res, cookies);
+
+    let userName = cookies.userName;
+    let role = cookies.role;
+    let story = newsService.NewsStories[id]
+
+    if (role != "author" || (story!=undefined && story.author != userName))
+        error403(res)
 
     try {
         newsService.deleteNewsStory(id)
