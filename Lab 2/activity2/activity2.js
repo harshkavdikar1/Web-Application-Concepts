@@ -3,37 +3,18 @@ var url = require('url');
 var qstring = require('querystring');
 
 http.createServer(function (req, res) {
-    // let requestURL = url.parse(req.url)
-    // let endPoint = requestURL.pathname;
+    let requestURL = url.parse(req.url)
+    let endPoint = requestURL.pathname;
 
-    // if (endPoint == "/")
-    //     serveHomePage(res);
+    if (endPoint == "/")
+        serveHomePage(req, res);
+    
+    else if(endPoint == "/login")
+        validateLogin(req, res);
+    
+    else if(endPoint == "/logout")
+        logoutUser(req, res);
 
-    if (req.method == "POST") {
-        var jsonData = "";
-        req.on('data', function (chunk) {
-            jsonData += chunk;
-        });
-        req.on('end', function () {
-            var reqObj = qstring.parse(jsonData);
-            if (reqObj.userName == "harsh" && reqObj.password == "hk") {
-                res.writeHead(200, {
-                    "Content-Type": "text/html"
-                });
-                serveViewNews(res);
-            }
-            res.writeHead(401, {
-                "Content-Type": "text/html"
-            });
-            serveFailedHomePage(res);
-        });
-    }
-    else if (req.method == "GET") {
-        res.writeHead(200, {
-            "Content-Type": "text/html"
-        });
-        serveHomePage(res);
-    }
     else {
         res.writeHead(405, {
             "Content-Type": "text/html"
@@ -43,10 +24,13 @@ http.createServer(function (req, res) {
 }).listen(3000);
 
 
-function serveHomePage(res) {
-    // res.writeHead(200, {
-    //     "Content-Type": "text/html"
-    // });
+function serveHomePage(req, res) {
+    if (req.method != "GET")
+        error405(res);
+
+    res.writeHead(200, {
+        "Content-Type": "text/html"
+    });
     res.end(
         `
             <!DOCTYPE html>
@@ -69,7 +53,43 @@ function serveHomePage(res) {
 }
 
 
-function serveViewNews(res) {
+function validateLogin(req, res) {
+    if (req.method != "POST")
+        error405(res);
+
+    let jsonData = "";
+    req.on('data', function (chunk) {
+        jsonData += chunk;
+    });
+
+    req.on('end', function () {
+        let reqObj = qstring.parse(jsonData);
+        if (reqObj.userName == "harsh" && reqObj.password == "hk") {
+            viewNews(res);
+        }
+        error401(res);
+    });
+}
+
+function error401(res) {
+    res.writeHead(401, {
+        "Content-Type": "text/html"
+    });
+    inavlidCredentials(res);
+}
+
+
+function error405(res) {
+    res.writeHead(405, {
+        "Content-Type": "text/html"
+    });
+    res.end("This method is not allowed")
+}
+
+function viewNews(res) {
+    res.writeHead(200, {
+        "Content-Type": "text/html"
+    });
     res.end (
         `
             <!DOCTYPE html>
@@ -80,7 +100,7 @@ function serveViewNews(res) {
     );
 }
 
-function serveFailedHomePage(res) {
+function inavlidCredentials(res) {
     res.end (
         `
             <!DOCTYPE html>
@@ -88,4 +108,11 @@ function serveFailedHomePage(res) {
             Click <a href="http://localhost:3000">here</a> to go to home page.
         `
     );
+}
+
+function logoutUser(req, res) {
+    res.writeHead(301, {
+        Location: "/"
+    });
+    res.end();
 }
