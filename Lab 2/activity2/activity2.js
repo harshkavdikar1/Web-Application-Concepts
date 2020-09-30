@@ -53,15 +53,32 @@ function serveHomePage(req, res) {
     if (req.method != "GET")
         error405(req, res);
 
+    let cookies = readCookies(req);
+    let userDetails = ""
+    let userName = "";
+    let role = "";
+    if (Object.keys(cookies).length) {
+        if (cookies.loggedin == "true") {
+            res.writeHead(307, {
+                Location: "/news"
+            })
+            res.end()
+        }
+        userName = cookies.userName;
+        role = cookies.role;
+        userDetails =  "Welcome " + role + " " + userName + ", please enter your password </br></br> "
+    }
+
     res.writeHead(200, {
         "Content-Type": "text/html"
     });
     res.end(
         `
             <!DOCTYPE html>
-            <form action="http://localhost:3000/login" method="POST">
+            ${userDetails}
+            <form action="/login" method="POST">
                 <label for="user">User Name : </label>
-                <input type="text" name="userName" required><br/><br/>
+                <input type="text" required name="userName" value=${userName}><br/><br/>
                 <label for="user">Password : </label>
                 <input type="password" name="password" required><br/><br/>
                 <label for="user">Role : </label>
@@ -91,7 +108,7 @@ function login(req, res) {
         let reqObj = qstring.parse(jsonData);
         if (reqObj.userName == "harsh" && reqObj.password == "hk") {
             res.writeHead(301, {
-                "Set-Cookie" : ['userName=' + reqObj.userName, 'role=' + reqObj.role, 'loggedin=true'],
+                "Set-Cookie": ['userName=' + reqObj.userName, 'role=' + reqObj.role, 'loggedin=true'],
                 Location: "/news"
             });
             res.end();
@@ -126,7 +143,7 @@ function getNews(userName, role) {
 }
 
 function viewAllNews(req, res) {
-    
+
     let cookies = readCookies(req);
 
     validateLogin(res, cookies);
@@ -156,7 +173,7 @@ function viewAllNews(req, res) {
     );
 }
 
-function viewNews(req, res, id, err="") {
+function viewNews(req, res, id, err = "") {
     if (req.method != "GET")
         error405(req, res)
 
@@ -220,10 +237,10 @@ function createNews(req, res) {
     req.on('end', function () {
         let reqObj = qstring.parse(jsonData);
         try {
-            newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
+            newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.publicationDate);
         }
         catch (err) {
-            renderCreateNews(res, reqObj.author, err = "Error : 500 Unable to create the story due to some internal issue please try again")
+            renderCreateNews(res, reqObj.author, err = "Error: 500 </br> Message: Unable to create the story due to some internal issue please try again")
         }
         res.writeHead(301, {
             Location: "/news"
@@ -237,7 +254,7 @@ function create(req, res) {
 
     if (req.method != "GET")
         error405(req, res)
-    
+
     let cookies = readCookies(req);
 
     validateLogin(res, cookies);
@@ -251,7 +268,7 @@ function create(req, res) {
     renderCreateNews(res, userName)
 }
 
-function renderCreateNews(res, userName, err="") {
+function renderCreateNews(res, userName, err = "") {
     res.writeHead(200, {
         "Content-Type": "text/html",
     });
@@ -267,7 +284,7 @@ function renderCreateNews(res, userName, err="") {
                 <label for="storyContent">Story Content : </label>
                 <input type="text" name="storyContent" required><br/><br/>
                 <label for="publicationDate">Publication Date</label>
-                <input type="date" name="storyContent" required><br/><br/>
+                <input type="datetime-local" name="publicationDate" required><br/><br/>
                 <label for="publicFlag">Public Flag</label>    
                 <input type="radio" value="private" name="publicFlag" checked>
                 <label for="private">Private</label>
@@ -294,35 +311,36 @@ function deleteNews(req, res, id) {
     let role = cookies.role;
     let story = newsService.NewsStories[id]
 
-    if (role != "author" || (story!=undefined && story.author != userName))
+    if (role != "author" || (story != undefined && story.author != userName))
         error403(res)
 
-    try {
-        newsService.deleteNewsStory(id)
-    }
-    catch (err) {
-        if (err == "Error cannot delete user story with id = " + id) {
-            res.writeHead(404, {
-                "Content-Type": "text/html"
-            })
-            res.end(
-                `
-                <!DOCTYPE html>
-                <h2>Unable to find story</h2><br/>
-                Click <a href="/news">here</a> to go back.
-                `
-            )
+    else {
+        try {
+            newsService.deleteNewsStory(id)
         }
-        else {
-            viewNews(req, res, id, err = "Error cannot delete user story with id = " + id)
+        catch (err) {
+            if (err == "Error cannot delete user story with id = " + id) {
+                res.writeHead(404, {
+                    "Content-Type": "text/html"
+                })
+                res.end(
+                    `
+                    <!DOCTYPE html>
+                    <h2>Unable to find story</h2><br/>
+                    Click <a href="/news">here</a> to go back.
+                    `
+                )
+            }
+            else {
+                viewNews(req, res, id, err = "Error cannot delete user story with id = " + id)
+            }
         }
+        res.writeHead(301, {
+            "Content-Type": "text/html",
+            Location: "/news"
+        });
+        res.end()
     }
-
-    res.writeHead(301, {
-        "Content-Type": "text/html",
-        Location: "/news"
-    });
-    res.end()
 }
 
 function logoutUser(req, res) {
@@ -333,7 +351,7 @@ function logoutUser(req, res) {
 
     res.writeHead(307, {
         "Content-Type": "text/html",
-        "Set-Cookie" : ['userName=' + cookies.userName, 'role=' + cookies.role, 'loggedin=false'],
+        "Set-Cookie": ['userName=' + cookies.userName, 'role=' + cookies.role, 'loggedin=false'],
         Location: "/"
     });
     res.end();
@@ -342,8 +360,8 @@ function logoutUser(req, res) {
 function readCookies(req) {
     let cookies = {}
     let requestCookies = req.headers.cookie
-    
-    if (requestCookies != undefined){
+
+    if (requestCookies != undefined) {
         requestCookies = requestCookies.split(";");
 
         for (requestCookie of requestCookies) {
@@ -351,7 +369,7 @@ function readCookies(req) {
             cookies[cookieDetails[0].trim()] = cookieDetails[1]
         }
     }
-      
+
     return cookies;
 }
 
