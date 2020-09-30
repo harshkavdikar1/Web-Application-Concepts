@@ -14,9 +14,8 @@ newsService.addNewsStory("Author2", "dummy title 4", "public", "dummy storyConte
 
 http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
-    // console.log(requestURL)
     let endPoint = requestURL.pathname;
-    // console.log(endPoint);
+
     if (endPoint == "/")
         serveHomePage(req, res);
 
@@ -27,13 +26,12 @@ http.createServer(function (req, res) {
         logoutUser(req, res);
 
     else if (endPoint == "/news"){
-        console.log(endPoint, req.method == "POST")
         if (req.method == "GET")
             viewAllNews(req, res);
         else if (req.method == "POST")
             createNews(req, res);
         else
-            error405(res);
+            error405(req, res);
     }
 
     else if (endPoint.includes("/news/"))
@@ -46,17 +44,14 @@ http.createServer(function (req, res) {
         create(req, res);
 
     else {
-        res.writeHead(405, {
-            "Content-Type": "text/html"
-        });
-        res.end("This method is not allowed")
+        error404(res)
     }
 }).listen(3000);
 
 
 function serveHomePage(req, res) {
     if (req.method != "GET")
-        error405(res);
+        error405(req, res);
 
     res.writeHead(200, {
         "Content-Type": "text/html"
@@ -85,7 +80,7 @@ function serveHomePage(req, res) {
 
 function validateLogin(req, res) {
     if (req.method != "POST")
-        error405(res);
+        error405(req, res);
 
     let jsonData = "";
     req.on('data', function (chunk) {
@@ -157,12 +152,18 @@ function viewAllNews(req, res) {
 
 function viewNews(req, res, id) {
     if (req.method != "GET")
-        error405(res)
+        error405(req, res)
     let story = newsService.NewsStories[id]
     let deleteButton = ""
 
     let userName = "Author1"
     let role = "author"
+
+    if (role == "guest" && story.publicFlag == "private")
+        error401(res)
+    
+    else if (role == "author" && story.author != userName) 
+        error401(res)
 
     if (userName == story.author && role == "author")
         deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
@@ -233,7 +234,7 @@ function create(req, res, err="") {
 
 function deleteNews(req, res, id) {
     if (req.method != "GET")
-        error405(res)
+        error405(req, res)
     
     try {
         newsService.deleteNewsStory(id)
@@ -286,7 +287,7 @@ function logoutUser(req, res) {
     res.end();
 }
 
-function err404(res) {
+function error404(res) {
     res.writeHead(404, {
         "Content-Type": "text/html"
     })
@@ -323,9 +324,26 @@ function error401InvalidCredentials(res) {
 }
 
 
-function error405(res) {
+function error405(req, res) {
     res.writeHead(405, {
         "Content-Type": "text/html"
     });
-    res.end("This method is not allowed")
+    res.end(
+        `
+            Error : 405
+            Message : ${req.method} is not allowed here
+        `
+    )
+}
+
+function error403(res) {
+    res.writeHead(403, {
+        "Content-Type": "text/html"
+    })
+    res.end(
+        `
+            Error : 403
+            Message : Forbidden
+        `
+    )
 }
