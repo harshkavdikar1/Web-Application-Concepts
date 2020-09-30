@@ -100,25 +100,9 @@ function validateLogin(req, res) {
             });
             res.end();
         }
-        error401(res);
+        error401InvalidCredentials(res);
     });
 }
-
-function error401(res) {
-    res.writeHead(401, {
-        "Content-Type": "text/html"
-    });
-    inavlidCredentials(res);
-}
-
-
-function error405(res) {
-    res.writeHead(405, {
-        "Content-Type": "text/html"
-    });
-    res.end("This method is not allowed")
-}
-
 
 function getNews(userName, role) {
     newsStories = newsService.filterNewsStory();
@@ -178,8 +162,9 @@ function viewNews(req, res, id) {
     let deleteButton = ""
 
     let userName = "Author1"
+    let role = "author"
 
-    if (userName == story.author)
+    if (userName == story.author && role == "author")
         deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
     res.end(
         `
@@ -202,8 +187,12 @@ function createNews(req, res) {
 
     req.on('end', function () {
         let reqObj = qstring.parse(jsonData);
-        newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
-
+        try {
+            newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
+        }
+        catch (err) {
+            create(req, res, err="Error : 500 Unable to create the story due to some internal issue please try again")
+        }
         res.writeHead(301, {
             Location: "/news"
         })
@@ -213,13 +202,14 @@ function createNews(req, res) {
 }
 
 
-function create(req, res) {
+function create(req, res, err="") {
     res.writeHead(200, {
         "Content-Type": "text/html",
     });
     res.end(
         `
             <!DOCTYPE html>
+            ${err}
             <form action = "/news" method = "POST">
                 <label for="author">Author : </label>
                 <input type="text" name="author" required><br/><br/>
@@ -235,6 +225,7 @@ function create(req, res) {
                 <input type="radio" value="author" name="publicFlag">
                 <label for="public">Public</label><br/><br/>
                 <input type="submit" value="Create">
+                <a href = "/news"> Cancel </a>
             </form>
         `
     )
@@ -248,16 +239,25 @@ function deleteNews(req, res, id) {
         newsService.deleteNewsStory(id)
     }
     catch (err) {
-        res.writeHead(404, {
-            "Content-Type": "text/html"
-        })
-        res.end(
-            `
-            <!DOCTYPE html>
-            <h2>Unable to find story</h2><br/>
-            Click <a href="/news">here</a> to go back.
-            `
-        )
+        if (err ==  "Error cannot delete user story with id = " + id){
+            res.writeHead(404, {
+                "Content-Type": "text/html"
+            })
+            res.end(
+                `
+                <!DOCTYPE html>
+                <h2>Unable to find story</h2><br/>
+                Click <a href="/news">here</a> to go back.
+                `
+            )
+        }
+        else {
+            res.writeHead(500, {
+                "Content-Type": "text/html",
+                Location: "/news" + id
+            })
+            res.end()
+        }
     }
 
     res.writeHead(301, {
@@ -284,4 +284,48 @@ function logoutUser(req, res) {
         Location: "/"
     });
     res.end();
+}
+
+function err404(res) {
+    res.writeHead(404, {
+        "Content-Type": "text/html"
+    })
+
+    res.end(
+        `
+            <!DOCTYPE html>
+            Error : 404
+            Message : Resource Not Found
+        `
+    )
+}
+
+function error401(res) {
+    res.writeHead(401, {
+        "Content-Type": "text/html"
+    })
+
+    res.end(
+        `
+            <!DOCTYPE html>
+            Error : 401
+            Message : Unauthorized
+            Click <a href = "/"> here </a> to login
+        `
+    )
+}
+
+function error401InvalidCredentials(res) {
+    res.writeHead(401, {
+        "Content-Type": "text/html"
+    });
+    inavlidCredentials(res);
+}
+
+
+function error405(res) {
+    res.writeHead(405, {
+        "Content-Type": "text/html"
+    });
+    res.end("This method is not allowed")
 }

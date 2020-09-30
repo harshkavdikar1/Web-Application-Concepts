@@ -83,7 +83,7 @@ function NewsService() {
         }
         catch (err) {
             console.log(err);
-            throw "Server Error"
+            throw err
         }
     };
 
