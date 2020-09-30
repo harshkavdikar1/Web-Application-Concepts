@@ -2,18 +2,33 @@ var http = require('http');
 var url = require('url');
 var qstring = require('querystring');
 
+const db = require('./NewsService');
+
+var newsService = new db.NewsService();
+
+newsService.addNewsStory("Author1", "dummy title 1", "private", "dummy storyContent 1", "2010-09-18");
+newsService.addNewsStory("Author1", "dummy title 2", "public", "dummy storyContent 2", "2012-09-11");
+newsService.addNewsStory("Author2", "dummy title 3", "private", "dummy storyContent 3", "2010-09-11");
+newsService.addNewsStory("Author2", "dummy title 4", "public", "dummy storyContent 4", "2010-09-11");
+
+
 http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
     let endPoint = requestURL.pathname;
 
+
+
     if (endPoint == "/")
         serveHomePage(req, res);
     
-    else if(endPoint == "/login")
+    else if (endPoint == "/login")
         validateLogin(req, res);
     
-    else if(endPoint == "/logout")
+    else if (endPoint == "/logout")
         logoutUser(req, res);
+
+    else if (endPoint == "/news")
+        viewNews(req, res);
 
     else {
         res.writeHead(405, {
@@ -90,6 +105,9 @@ function viewNews(res) {
     res.writeHead(200, {
         "Content-Type": "text/html"
     });
+    newsStories = newsService.filterNewsStory();
+
+    console.log(newsStories);
     res.end (
         `
             <!DOCTYPE html>
