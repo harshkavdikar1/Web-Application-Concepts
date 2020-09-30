@@ -14,8 +14,9 @@ newsService.addNewsStory("Author2", "dummy title 4", "public", "dummy storyConte
 
 http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
+    // console.log(requestURL)
     let endPoint = requestURL.pathname;
-
+    // console.log(endPoint);
     if (endPoint == "/")
         serveHomePage(req, res);
     
@@ -28,8 +29,13 @@ http.createServer(function (req, res) {
     else if (endPoint == "/news")
         viewAllNews(req, res);
 
-    else if (endPoint == "/news/")
-        handleNewsRequest(req, res);
+    else if (endPoint.includes("/news/"))
+        // console.log(endPoint.split("/").pop())
+        handleNewsRequest(req, res, endPoint.split("/").pop());
+
+    else if (endPoint.includes("/deletenews/"))
+        // console.log(endPoint.split("/").pop())
+        deleteNews(req, res, endPoint.split("/").pop());
 
     else {
         res.writeHead(405, {
@@ -81,7 +87,6 @@ function validateLogin(req, res) {
     req.on('end', function () {
         let reqObj = qstring.parse(jsonData);
         if (reqObj.userName == "harsh" && reqObj.password == "hk") {
-            // viewNews(req, res);
             res.writeHead(301, {
                 Location: "/news"
             });
@@ -134,15 +139,15 @@ function getNews(userName, role) {
 
 function viewAllNews(req, res) {
 
-    res.writeHead(200, {
-        "Content-Type": "text/html"
-    });
-
     let userName = "Harsh";
     let role = "Author";
     let createNewsButton = "</br></br></br>"
     if (role == "Author")
         createNewsButton = '<a href = "/create">Create News</a>' + createNewsButton
+
+    res.writeHead(200, {
+        "Content-Type": "text/html"
+    });
 
     res.end (
         `
@@ -158,14 +163,48 @@ function viewAllNews(req, res) {
     );
 }
 
-function handleNewsRequest(req, res) {
+function viewNews(req, res, id) {
+    let story = newsService.NewsStories[id]
+    let deleteButton = ""
+
+    let userName = "Author1"
+
+    if (userName == story.author)
+        deleteButton = '<a href = "/deletenews/' + id + '">Delete Story</a>'
+    res.end(
+        `
+            <!DOCTYPE html>
+            <b> Title : </b> ${story.title} </br>
+            <b> Author : </b> ${story.author} </br>
+            <b> Content : </b> ${story.storyContent} </br>
+            <b> Publication Date : </b> ${story.date} </br>
+            <b> Content Visibility : </b> ${story.publicFlag} </br>
+            ${deleteButton}
+        `
+    )
+}
+
+
+function handleNewsRequest(req, res, id) {
     if (req.method == "GET")
-        viewNews(req, res);
-    else if (req.method == "POSt")
-        createNews(req, res);
-    else if (req.method == "DELETE")
-        deleteNews(req, res)
+        viewNews(req, res, id);
+    else if (req.method == "POST")
+        createNews(req, res, id);
     error405(res)
+}
+
+
+function  deleteNews(req, res, id) {
+    if (req.method != "GET")
+        error405(res)
+    
+    newsService.deleteNewsStory(id)
+
+    res.writeHead(301, {
+        "Content-Type": "text/html",
+        Location: "/news"
+    });
+    res.end()
 }
 
 
@@ -178,6 +217,7 @@ function inavlidCredentials(res) {
         `
     );
 }
+
 
 function logoutUser(req, res) {
     res.writeHead(301, {
