@@ -25,7 +25,7 @@ http.createServer(function (req, res) {
     else if (endPoint == "/logout")
         logoutUser(req, res);
 
-    else if (endPoint == "/news"){
+    else if (endPoint == "/news") {
         if (req.method == "GET")
             viewAllNews(req, res);
         else if (req.method == "POST")
@@ -136,7 +136,7 @@ function viewAllNews(req, res) {
         "Content-Type": "text/html"
     });
 
-    res.end (
+    res.end(
         `
             <!DOCTYPE html>
             <title> Latest News </title>
@@ -150,9 +150,13 @@ function viewAllNews(req, res) {
     );
 }
 
-function viewNews(req, res, id) {
+function viewNews(req, res, id, err="") {
     if (req.method != "GET")
         error405(req, res)
+
+    if (id in newsService.NewsStories == false)
+        error404(res)
+
     let story = newsService.NewsStories[id]
     let deleteButton = ""
 
@@ -161,8 +165,8 @@ function viewNews(req, res, id) {
 
     if (role == "guest" && story.publicFlag == "private")
         error401(res)
-    
-    else if (role == "author" && story.author != userName) 
+
+    else if (role == "author" && story.author != userName)
         error401(res)
 
     if (userName == story.author && role == "author")
@@ -170,6 +174,7 @@ function viewNews(req, res, id) {
     res.end(
         `
             <!DOCTYPE html>
+            ${err} </br>
             <b> Title : </b> ${story.title} </br>
             <b> Author : </b> ${story.author} </br>
             <b> Content : </b> ${story.storyContent} </br>
@@ -192,7 +197,7 @@ function createNews(req, res) {
             newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
         }
         catch (err) {
-            create(req, res, err="Error : 500 Unable to create the story due to some internal issue please try again")
+            create(req, res, err = "Error : 500 Unable to create the story due to some internal issue please try again")
         }
         res.writeHead(301, {
             Location: "/news"
@@ -203,7 +208,11 @@ function createNews(req, res) {
 }
 
 
-function create(req, res, err="") {
+function create(req, res, err = "") {
+
+    if (req.method != "GET")
+        error405(req, res)
+
     res.writeHead(200, {
         "Content-Type": "text/html",
     });
@@ -235,12 +244,12 @@ function create(req, res, err="") {
 function deleteNews(req, res, id) {
     if (req.method != "GET")
         error405(req, res)
-    
+
     try {
         newsService.deleteNewsStory(id)
     }
     catch (err) {
-        if (err ==  "Error cannot delete user story with id = " + id){
+        if (err == "Error cannot delete user story with id = " + id) {
             res.writeHead(404, {
                 "Content-Type": "text/html"
             })
@@ -253,11 +262,7 @@ function deleteNews(req, res, id) {
             )
         }
         else {
-            res.writeHead(500, {
-                "Content-Type": "text/html",
-                Location: "/news" + id
-            })
-            res.end()
+            viewNews(req, res, id, err = "Error cannot delete user story with id = " + id)
         }
     }
 
@@ -267,18 +272,6 @@ function deleteNews(req, res, id) {
     });
     res.end()
 }
-
-
-function inavlidCredentials(res) {
-    res.end (
-        `
-            <!DOCTYPE html>
-            <h2>Error!! Invalid user name and password combination.</h2><br/>
-            Click <a href="http://localhost:3000">here</a> to go to home page.
-        `
-    );
-}
-
 
 function logoutUser(req, res) {
     res.writeHead(301, {
@@ -309,9 +302,9 @@ function error401(res) {
     res.end(
         `
             <!DOCTYPE html>
-            Error : 401
-            Message : Unauthorized
-            Click <a href = "/"> here </a> to login
+            Error : 401 </br>
+            Message : Unauthorized </br>
+            Click <a href = "/"> here </a> to login.
         `
     )
 }
@@ -320,7 +313,13 @@ function error401InvalidCredentials(res) {
     res.writeHead(401, {
         "Content-Type": "text/html"
     });
-    inavlidCredentials(res);
+    res.end(
+        `
+            <!DOCTYPE html>
+            <h2>Error!! Invalid user name and password combination.</h2><br/>
+            Click <a href = "/"> here </a> to login again.
+        `
+    );
 }
 
 
@@ -330,7 +329,7 @@ function error405(req, res) {
     });
     res.end(
         `
-            Error : 405
+            Error : 405 </br>
             Message : ${req.method} is not allowed here
         `
     )
@@ -342,7 +341,7 @@ function error403(res) {
     })
     res.end(
         `
-            Error : 403
+            Error : 403 </br>
             Message : Forbidden
         `
     )
