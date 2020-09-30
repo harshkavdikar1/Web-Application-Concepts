@@ -40,6 +40,7 @@ function NewsService() {
         }
         catch (err) {
             console.log(err);
+            throw "Server Error"
         }
     };
 
@@ -65,6 +66,7 @@ function NewsService() {
         }
         catch (err) {
             console.log(err);
+            throw "Server Error"
         }
     };
 
@@ -81,6 +83,7 @@ function NewsService() {
         }
         catch (err) {
             console.log(err);
+            throw "Server Error"
         }
     };
 

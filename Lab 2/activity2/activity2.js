@@ -19,23 +19,31 @@ http.createServer(function (req, res) {
     // console.log(endPoint);
     if (endPoint == "/")
         serveHomePage(req, res);
-    
+
     else if (endPoint == "/login")
         validateLogin(req, res);
-    
+
     else if (endPoint == "/logout")
         logoutUser(req, res);
-    
-    else if (endPoint == "/news")
-        viewAllNews(req, res);
+
+    else if (endPoint == "/news"){
+        console.log(endPoint, req.method == "POST")
+        if (req.method == "GET")
+            viewAllNews(req, res);
+        else if (req.method == "POST")
+            createNews(req, res);
+        else
+            error405(res);
+    }
 
     else if (endPoint.includes("/news/"))
-        // console.log(endPoint.split("/").pop())
-        handleNewsRequest(req, res, endPoint.split("/").pop());
+        viewNews(req, res, endPoint.split("/").pop());
 
     else if (endPoint.includes("/deletenews/"))
-        // console.log(endPoint.split("/").pop())
         deleteNews(req, res, endPoint.split("/").pop());
+
+    else if (endPoint == "/createnews")
+        create(req, res);
 
     else {
         res.writeHead(405, {
@@ -143,7 +151,7 @@ function viewAllNews(req, res) {
     let role = "Author";
     let createNewsButton = "</br></br></br>"
     if (role == "Author")
-        createNewsButton = '<a href = "/create">Create News</a>' + createNewsButton
+        createNewsButton = '<a href = "/createnews">Create News</a>' + createNewsButton
 
     res.writeHead(200, {
         "Content-Type": "text/html"
@@ -164,6 +172,8 @@ function viewAllNews(req, res) {
 }
 
 function viewNews(req, res, id) {
+    if (req.method != "GET")
+        error405(res)
     let story = newsService.NewsStories[id]
     let deleteButton = ""
 
@@ -184,21 +194,71 @@ function viewNews(req, res, id) {
     )
 }
 
+function createNews(req, res) {
+    let jsonData = "";
+    req.on('data', function (chunk) {
+        jsonData += chunk;
+    });
 
-function handleNewsRequest(req, res, id) {
-    if (req.method == "GET")
-        viewNews(req, res, id);
-    else if (req.method == "POST")
-        createNews(req, res, id);
-    error405(res)
+    req.on('end', function () {
+        let reqObj = qstring.parse(jsonData);
+        newsService.addNewsStory(reqObj.author, reqObj.title, reqObj.publicFlag, reqObj.storyContent, reqObj.date);
+
+        res.writeHead(301, {
+            Location: "/news"
+        })
+
+        res.end()
+    });
 }
 
 
-function  deleteNews(req, res, id) {
+function create(req, res) {
+    res.writeHead(200, {
+        "Content-Type": "text/html",
+    });
+    res.end(
+        `
+            <!DOCTYPE html>
+            <form action = "/news" method = "POST">
+                <label for="author">Author : </label>
+                <input type="text" name="author" required><br/><br/>
+                <label for="title">Title : </label>
+                <input type="text" name="title" required><br/><br/>
+                <label for="storyContent">Story Content : </label>
+                <input type="text" name="storyContent" required><br/><br/>
+                <label for="publicationDate">Publication Date</label>
+                <input type="date" name="storyContent" required><br/><br/>
+                <label for="publicFlag">Public Flag</label>    
+                <input type="radio" value="private" name="publicFlag" checked>
+                <label for="private">Private</label>
+                <input type="radio" value="author" name="publicFlag">
+                <label for="public">Public</label><br/><br/>
+                <input type="submit" value="Create">
+            </form>
+        `
+    )
+}
+
+function deleteNews(req, res, id) {
     if (req.method != "GET")
         error405(res)
     
-    newsService.deleteNewsStory(id)
+    try {
+        newsService.deleteNewsStory(id)
+    }
+    catch (err) {
+        res.writeHead(404, {
+            "Content-Type": "text/html"
+        })
+        res.end(
+            `
+            <!DOCTYPE html>
+            <h2>Unable to find story</h2><br/>
+            Click <a href="/news">here</a> to go back.
+            `
+        )
+    }
 
     res.writeHead(301, {
         "Content-Type": "text/html",
