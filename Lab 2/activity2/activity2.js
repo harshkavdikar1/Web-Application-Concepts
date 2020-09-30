@@ -16,8 +16,6 @@ http.createServer(function (req, res) {
     let requestURL = url.parse(req.url)
     let endPoint = requestURL.pathname;
 
-
-
     if (endPoint == "/")
         serveHomePage(req, res);
     
@@ -80,7 +78,11 @@ function validateLogin(req, res) {
     req.on('end', function () {
         let reqObj = qstring.parse(jsonData);
         if (reqObj.userName == "harsh" && reqObj.password == "hk") {
-            viewNews(res);
+            // viewNews(req, res);
+            res.writeHead(301, {
+                Location: "/news"
+            });
+            res.end();
         }
         error401(res);
     });
@@ -101,19 +103,52 @@ function error405(res) {
     res.end("This method is not allowed")
 }
 
-function viewNews(res) {
+
+function getNews(userName, role) {
+    newsStories = newsService.filterNewsStory();
+
+    let stories = ""
+
+    for (story of newsStories) {
+        if (role == "Guest") {
+            if (story.publicFlag == "public")
+                stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
+            else
+                stories += story.title + '</br>'
+        }
+        else if (role == "Subscriber") {
+            stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
+        }
+        else if (role == "Guest") {
+            if (story.publicFlag == "public" || story.author == userName)
+                stories += '<a href = "/news/' + story.id + '">' + story.title + '</a></br>'
+            else
+                stories += story.title + '</br>'
+        }
+    }
+    return stories
+}
+
+function viewNews(req, res) {
+    if (req.method != "GET")
+        error405(res);
+
     res.writeHead(200, {
         "Content-Type": "text/html"
     });
-    newsStories = newsService.filterNewsStory();
 
-    console.log(newsStories);
+    let userName = "Harsh";
+    let role = "Subscriber";
+
     res.end (
         `
             <!DOCTYPE html>
-            UserName :          Role :          
-            <a href="http://localhost:3000/logout">Logout</a>
-            How are you?
+            <title> Latest News </title>
+            UserName: ${userName} </br>
+            Role: ${role} </br></br></br>
+            ${getNews(userName, role)}
+            </br></br></br>
+            <a href="/logout">Logout</a>
         `
     );
 }
