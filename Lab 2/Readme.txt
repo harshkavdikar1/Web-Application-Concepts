@@ -45,6 +45,8 @@ Activity 2:
 		/deletenews/<id> : 
 			Method : GET
 			Responsibility : Delete the news story
+			Notes:
+				While deleting the story if the id does not exist it will throw 404 error of resource not found and if there was an error while deleting the story it will throw 500 error of Server Error
 		/news/<id> : 
 			Method : GET
 			Responsibility : View a particular story

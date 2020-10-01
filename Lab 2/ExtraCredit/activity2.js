@@ -48,7 +48,11 @@ http.createServer(function (req, res) {
     }
 }).listen(3000);
 
-
+/**
+ * Autoselects the role of the user who has previously visited webage
+ * @param {String} selectedRole User role stored in cookie
+ * @param {String} role         Role in the HTML page
+ */
 function isCheckedRole(selectedRole, role) {
     return selectedRole == role || (role == "guest" && selectedRole == "") ? "checked" : ""
 }
@@ -98,7 +102,11 @@ function serveHomePage(req, res) {
     );
 }
 
-
+/**
+ * Validate User credentials, set-cookies and redirect to target page
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ */
 function login(req, res) {
     if (req.method != "POST")
         error405(req, res);
@@ -121,6 +129,11 @@ function login(req, res) {
     });
 }
 
+/**
+ * Get all the news stories for current user
+ * @param {String} userName     UserName of the user
+ * @param {String} role         Current role of the user
+ */
 function getNews(userName, role) {
     newsStories = newsService.filterNewsStory();
 
@@ -146,6 +159,11 @@ function getNews(userName, role) {
     return stories
 }
 
+/**
+ * Display all the titles of news stories to the user
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ */
 function viewAllNews(req, res) {
 
     let cookies = readCookies(req);
@@ -177,6 +195,13 @@ function viewAllNews(req, res) {
     );
 }
 
+/**
+ * Show a particular news item to the user
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ * @param {Number} id           Id of news story
+ * @param {String} err          Error Messsage for the user in case of failure
+ */
 function viewNews(req, res, id, err = "") {
     if (req.method != "GET")
         error405(req, res)
@@ -221,6 +246,11 @@ function viewNews(req, res, id, err = "") {
     }
 }
 
+/**
+ * Handle POST request to create a new News Story
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ */
 function createNews(req, res) {
 
     let cookies = readCookies(req);
@@ -253,7 +283,11 @@ function createNews(req, res) {
     });
 }
 
-
+/**
+ * GET method to render the create news page to the user
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object 
+ */
 function create(req, res) {
 
     if (req.method != "GET")
@@ -272,6 +306,12 @@ function create(req, res) {
     renderCreateNews(res, userName)
 }
 
+/**
+ * Render the HTML page to create a news item
+ * @param {HTTP Response} res   HTTP response object
+ * @param {String} userName     Current users username
+ * @param {String} err          Error message in case of failure
+ */
 function renderCreateNews(res, userName, err = "") {
     res.writeHead(200, {
         "Content-Type": "text/html",
@@ -302,6 +342,12 @@ function renderCreateNews(res, userName, err = "") {
 }
 
 
+/**
+ * Delete the News Story with given id
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ * @param {Number} id           Id of a particuar user story
+ */
 function deleteNews(req, res, id) {
     if (req.method != "GET")
         error405(req, res)
@@ -346,6 +392,11 @@ function deleteNews(req, res, id) {
     }
 }
 
+/**
+ * Logout the user and set the cookies in the browser
+ * @param {HTTP Request} req    HTTP request object
+ * @param {HTTP Response} res   HTTP response object
+ */
 function logoutUser(req, res) {
     if (req.method != "GET")
         error405(req, res)
@@ -360,6 +411,10 @@ function logoutUser(req, res) {
     res.end();
 }
 
+/**
+ * Parse the cookies from the browser and stores it in Javascript object
+ * @param {HTTP Request} req    HTTP request object
+ */
 function readCookies(req) {
     let cookies = {}
     let requestCookies = req.headers.cookie
@@ -376,6 +431,11 @@ function readCookies(req) {
     return cookies;
 }
 
+/**
+ * Validates if the user is looged in or not
+ * @param {HTTP Response} res   HTTP response object
+ * @param {Object} cookies      Javascript object with key value pairs of cookies
+ */
 function validateLogin(res, cookies) {
     if (!Object.keys(cookies).length || cookies.loggedin == "false") {
         res.writeHead(307, {
@@ -385,7 +445,10 @@ function validateLogin(res, cookies) {
     }
 }
 
-
+/**
+ * 404 Error Code (Resource Not found Error Handles)
+ * @param {HTTP Response} res   HTTP response object
+ */
 function error404(res) {
     res.writeHead(404, {
         "Content-Type": "text/html"
@@ -400,6 +463,10 @@ function error404(res) {
     )
 }
 
+/**
+ * 401 Error Code (Unauthorized Error Handles)
+ * @param {HTTP Response} res   HTTP response object
+ */
 function error401(res) {
     res.writeHead(401, {
         "Content-Type": "text/html"
@@ -415,6 +482,10 @@ function error401(res) {
     )
 }
 
+/**
+ * 401 Error Code (Unauthorized Error Handles)
+ * @param {HTTP Response} res   HTTP response object
+ */
 function error401InvalidCredentials(res) {
     res.writeHead(401, {
         "Content-Type": "text/html"
@@ -428,7 +499,10 @@ function error401InvalidCredentials(res) {
     );
 }
 
-
+/**
+ * 405 Error Code (Method Not allowed Error Handles)
+ * @param {HTTP Response} res   HTTP response object
+ */
 function error405(req, res) {
     res.writeHead(405, {
         "Content-Type": "text/html"
@@ -441,6 +515,10 @@ function error405(req, res) {
     )
 }
 
+/**
+ * 403 Error Code (Forbidden Error Handles)
+ * @param {HTTP Response} res   HTTP response object
+ */
 function error403(res) {
     res.writeHead(403, {
         "Content-Type": "text/html"

@@ -151,9 +151,4 @@ function NewsService() {
     };
 };
 
-// var obj = new NewsService();
-// console.log(obj.NewsStories);
-
-// console.log(obj.id);
-
 module.exports = {NewsService};
