@@ -40,8 +40,7 @@ function NewsService() {
             fs.writeFileSync("data.json", JSON.stringify(stories) , {encoding:'utf-8'})
         }
         catch (err) {
-            console.log("unable to write data to file")
-            console.log(err);
+            throw err;
         }
     }
 
@@ -72,7 +71,7 @@ function NewsService() {
             this.NewsStories[id].title = title;
         }
         catch (err) {
-            console.log(err);
+            throw err;
         }
     };
 
@@ -98,7 +97,7 @@ function NewsService() {
             writeDataToStore(this.NewsStories);
         }
         catch (err) {
-            console.log(err);
+            throw err;
         }
     };
 
@@ -115,7 +114,7 @@ function NewsService() {
             writeDataToStore(this.NewsStories);
         }
         catch (err) {
-            console.log(err);
+            throw err;
         }
     };
 

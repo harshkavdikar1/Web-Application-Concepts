@@ -365,7 +365,6 @@ function deleteNews(req, res, id) {
     let userName = cookies.userName;
     let role = cookies.role;
     let story = newsService.NewsStories[id]
-
     if (role != "author" || (story != undefined && story.author != userName))
         error403(res)
 

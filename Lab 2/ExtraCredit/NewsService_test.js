@@ -20,7 +20,12 @@ newsService.updatestoryContent(1, "Author1", "dummy title 1 updated storyContent
 newsService.deleteNewsStory(3);
 
 // Test case 5 Delete a story that does not exist
-newsService.deleteNewsStory(3);
+try{
+    newsService.deleteNewsStory(3);
+}
+catch (err) {
+    console.log(err)
+}
 
 // 1. These are just to prepoluate null values and have a uniform method invocation for filter method.
 // 2. Make actual changes in method invocation

@@ -39,8 +39,7 @@ function NewsService() {
             this.NewsStories[id].title = title;
         }
         catch (err) {
-            console.log(err);
-            throw "Server Error"
+            throw err
         }
     };
 
@@ -65,8 +64,7 @@ function NewsService() {
             this.NewsStories[id].publicFlag = publicFlag;
         }
         catch (err) {
-            console.log(err);
-            throw "Server Error"
+            throw err
         }
     };
 
