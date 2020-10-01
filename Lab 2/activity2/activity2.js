@@ -68,6 +68,7 @@ function serveHomePage(req, res) {
     if (Object.keys(cookies).length) {
         if (cookies.loggedin == "true") {
             res.writeHead(307, {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
                 Location: "/news"
             })
             res.end()
@@ -78,7 +79,8 @@ function serveHomePage(req, res) {
     }
 
     res.writeHead(200, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     });
     res.end(
         `
@@ -121,6 +123,7 @@ function login(req, res) {
         if (reqObj.userName === reqObj.password) {
             res.writeHead(301, {
                 "Set-Cookie": ['userName=' + reqObj.userName, 'role=' + reqObj.role, 'loggedin=true'],
+                "Cache-Control": "no-cache, no-store, must-revalidate",
                 Location: "/news"
             });
             res.end();
@@ -178,7 +181,8 @@ function viewAllNews(req, res) {
         createNewsButton = '<a href = "/createnews">Create News</a>' + createNewsButton
 
     res.writeHead(200, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     });
 
     res.end(
@@ -277,6 +281,7 @@ function createNews(req, res) {
             renderCreateNews(res, reqObj.author, err = "Error: 500 </br> Message: Unable to create the story due to some internal issue please try again")
         }
         res.writeHead(301, {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
             Location: "/news"
         })
         res.end()
@@ -315,6 +320,7 @@ function create(req, res) {
 function renderCreateNews(res, userName, err = "") {
     res.writeHead(200, {
         "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     });
     res.end(
         `
@@ -370,7 +376,8 @@ function deleteNews(req, res, id) {
         catch (err) {
             if (err == "Error cannot delete user story with id = " + id) {
                 res.writeHead(404, {
-                    "Content-Type": "text/html"
+                    "Content-Type": "text/html",
+                    "Cache-Control": "no-cache, no-store, must-revalidate"
                 })
                 res.end(
                     `
@@ -386,6 +393,7 @@ function deleteNews(req, res, id) {
         }
         res.writeHead(301, {
             "Content-Type": "text/html",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
             Location: "/news"
         });
         res.end()
@@ -406,6 +414,7 @@ function logoutUser(req, res) {
     res.writeHead(307, {
         "Content-Type": "text/html",
         "Set-Cookie": ['userName=' + cookies.userName, 'role=' + cookies.role, 'loggedin=false'],
+        "Cache-Control": "no-cache, no-store, must-revalidate",
         Location: "/"
     });
     res.end();
@@ -439,6 +448,7 @@ function readCookies(req) {
 function validateLogin(res, cookies) {
     if (!Object.keys(cookies).length || cookies.loggedin == "false") {
         res.writeHead(307, {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
             Location: "/"
         });
         res.end();
@@ -451,7 +461,8 @@ function validateLogin(res, cookies) {
  */
 function error404(res) {
     res.writeHead(404, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     })
 
     res.end(
@@ -469,7 +480,8 @@ function error404(res) {
  */
 function error401(res) {
     res.writeHead(401, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     })
 
     res.end(
@@ -488,7 +500,8 @@ function error401(res) {
  */
 function error401InvalidCredentials(res) {
     res.writeHead(401, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     });
     res.end(
         `
@@ -505,7 +518,8 @@ function error401InvalidCredentials(res) {
  */
 function error405(req, res) {
     res.writeHead(405, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     });
     res.end(
         `
@@ -521,7 +535,8 @@ function error405(req, res) {
  */
 function error403(res) {
     res.writeHead(403, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
     })
     res.end(
         `
