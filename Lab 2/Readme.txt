@@ -38,7 +38,7 @@ Activity 2:
 		
 	Every Field is case sensitive.
 	
-		EndPoints:
+	API EndPoints:
 		/  		:
 			Method : GET
 			Responsibility : Render Home Page
