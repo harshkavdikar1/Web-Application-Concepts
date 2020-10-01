@@ -82,7 +82,6 @@ function NewsService() {
             delete this.NewsStories[id];
         }
         catch (err) {
-            console.log(err);
             throw err
         }
     };
