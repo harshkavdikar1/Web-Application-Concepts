@@ -1,4 +1,7 @@
 <html>
+    <head>
+        <title>MVC Ex Solution Landing Page</title>
+    </head>
     <body>
         <form method="POST">
             <p>Survey page: <%= page %> for user <%= username %></p>
@@ -13,9 +16,7 @@
             <% if (prevFlag == true) { %>
                 <input type="submit" name="action" value="prev">
             <% } %>
-            <% if (nextFlag == true) { %>
-                <input type="submit" name="action" value="next">
-            <% } %>
+            <input type="submit" name="action" value="next">
         </form>
     </body>
 </html>
