@@ -1,0 +1,21 @@
+<html>
+    <body>
+        <form method="POST">
+            <p>Survey page: <%= page %> for user <%= username %></p>
+            <p><%= question %></p>
+            <p><a href="">Set your rendering preferences</a></p>
+            <p><% let i; for (i = 0; i < options.length; i++) { %>
+                <input type="radio" name="choice" value= <%= i %>> <%= options[i].choice %>
+                <% if (horizontalFlag == false) { %>
+                    <br>
+                <% } %>
+            <% }; %></p>
+            <% if (prevFlag == true) { %>
+                <input type="submit" name="action" value="prev">
+            <% } %>
+            <% if (nextFlag == true) { %>
+                <input type="submit" name="action" value="next">
+            <% } %>
+        </form>
+    </body>
+</html>
