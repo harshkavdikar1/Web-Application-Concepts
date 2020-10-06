@@ -6,10 +6,10 @@
         <form method="POST">
             <p>Survey page: <%= page %> for user <%= username %></p>
             <p><%= question %></p>
-            <p><a href="">Set your rendering preferences</a></p>
+            <p><a href="/preference">Set your rendering preferences</a></p>
             <p><% let i; for (i = 0; i < options.length; i++) { %>
-                <input type="radio" name="choice" value= <%= i %>> <%= options[i].choice %>
-                <% if (horizontalFlag == false) { %>
+                <input type="radio" name="choice" value= <%= i %> <%= i==selectedChoice ? "checked" : "" %>> <%= options[i].choice %>
+                <% if (preference == "vertical") { %>
                     <br>
                 <% } %>
             <% }; %></p>
