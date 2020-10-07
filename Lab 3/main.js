@@ -67,7 +67,7 @@ app.post("/landing", setCookies, async function (req, res) {
         res.redirect("/survey")
         return
     }
-    else if (req.body.action == "survey")
+    else if (req.body.action == "match")
         res.redirect("/match")
     else
         res.redirect("/landing")
@@ -82,17 +82,6 @@ app.use("/survey", function(req, res, next) {
         next();
     }
 })
-
-function prevQuestion(req, res, next) {
-    if (req.body.action == "prev") {
-        req.session.currentPage--;
-        res.redirect("/survey");
-    }
-    else if (req.body.action == "next")
-        next()
-    else
-        res.redirect("/survey")
-}
 
 function setAnswer(req, res, next) {
     let page = req.session.currentPage;
@@ -133,43 +122,15 @@ function renderSurveyPage(req, res) {
     })
 }
 
-app.post("/survey", setAnswer, prevQuestion, sessionCompleteCheck, function (req, res) {
-
-    // Get question info for next question
-    req.session.currentPage++;
+app.post("/survey", setAnswer, sessionCompleteCheck, function (req, res) {
+    if (req.body.action == "prev")
+        req.session.currentPage--;
+    else if (req.body.action == "next")
+        req.session.currentPage++;
     renderSurveyPage(req, res);
-    // let page = req.session.currentPage;
-    // let questions = req.session.questions;
-    // let questionid = questions[page].id
-    // let selectedChoice = req.session.selectedChoices[questionid]
-
-    // res.render("survey.ejs", {
-    //     question: questions[page].question,
-    //     options: questions[page].choices,
-    //     page: page + 1,
-    //     selectedChoice: selectedChoice === undefined ? -1 : selectedChoice,
-    //     username: req.cookies.username,
-    //     preference: req.cookies.preference,
-    //     prevFlag: page == 0 ? false : true
-    // })
 })
 
 app.get("/survey", function (req, res) {
-
-    // let page = req.session.currentPage;
-    // let questions = req.session.questions;
-    // let questionid = questions[page].id
-    // let selectedChoice = req.session.selectedChoices[questionid]
-
-    // res.render("survey.ejs", {
-    //     question: questions[page].question,
-    //     options: questions[page].choices,
-    //     page: page + 1,
-    //     selectedChoice: selectedChoice == undefined ? -1 : selectedChoice,
-    //     username: req.cookies.username,
-    //     preference: req.cookies.preference,
-    //     prevFlag: page == 0 ? false : true
-    // })
     renderSurveyPage(req, res)
 })
 
