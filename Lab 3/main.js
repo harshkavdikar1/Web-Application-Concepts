@@ -25,14 +25,10 @@ app.use(session({
     name: 'sessionid'
 }));
 
-// Read the questions file to render questions to user
-var questions = {}
-fs.readFile("survey.json", "utf-8", function (err, data) {
-    if (err)
-        console.log(err);
-    else
-        questions = JSON.parse(data).questions;
-});
+app.use(function(req, res, next) {
+    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    next()
+})
 
 app.get("/", function (req, res) {
     res.redirect(307, "/landing")
@@ -44,20 +40,37 @@ app.get("/landing", function (req, res) {
     })
 })
 
-app.post("/landing", function (req, res) {
-
+function setCookies(req, res, next) {
     res.cookie("username", req.body.username);
     res.cookie("preference", req.cookies.preference == undefined ? "horizontal" : req.cookies.preference);
+    next()
+}
 
+// Read the questions file to render questions to user
+async function readSurvey() {
+    return new Promise((resolve, reject) => {
+        fs.readFile("survey.json", "utf-8", function (err, data) {
+          if (err) {
+            reject(err);
+          }
+          resolve(JSON.parse(data).questions);
+        });
+      });
+}
+
+app.post("/landing", setCookies, async function (req, res) {
     if (req.body.action == "survey") {
         req.session.currentPage = 0;
         req.session.selectedChoices = {};
         req.session.userName = req.body.username;
+        req.session.questions = await readSurvey();
         res.redirect("/survey")
         return
     }
-    else
+    else if (req.body.action == "survey")
         res.redirect("/match")
+    else
+        res.redirect("/landing")
 })
 
 app.use("/survey", function(req, res, next) {
@@ -70,24 +83,27 @@ app.use("/survey", function(req, res, next) {
     }
 })
 
-
 function prevQuestion(req, res, next) {
     if (req.body.action == "prev") {
         req.session.currentPage--;
         res.redirect("/survey");
     }
-    else
+    else if (req.body.action == "next")
         next()
+    else
+        res.redirect("/survey")
 }
 
 function setAnswer(req, res, next) {
     let page = req.session.currentPage;
+    let questions = req.session.questions;
     let questionid = questions[page].id;
     req.session.selectedChoices[questionid] = req.body.choice === undefined ? -1 : req.body.choice;
     next()
 }
 
 function sessionCompleteCheck(req, res, next) {
+    let questions = req.session.questions;
     if (req.session.currentPage == questions.length - 1) {
         req.session.destroy(function(err) {
             if (err)
@@ -100,11 +116,9 @@ function sessionCompleteCheck(req, res, next) {
         next()
 }
 
-app.post("/survey", setAnswer, prevQuestion, sessionCompleteCheck, function (req, res) {
-
-    // Get question info for next question
-    req.session.currentPage++;
+function renderSurveyPage(req, res) {
     let page = req.session.currentPage;
+    let questions = req.session.questions;
     let questionid = questions[page].id
     let selectedChoice = req.session.selectedChoices[questionid]
 
@@ -117,23 +131,46 @@ app.post("/survey", setAnswer, prevQuestion, sessionCompleteCheck, function (req
         preference: req.cookies.preference,
         prevFlag: page == 0 ? false : true
     })
+}
+
+app.post("/survey", setAnswer, prevQuestion, sessionCompleteCheck, function (req, res) {
+
+    // Get question info for next question
+    req.session.currentPage++;
+    renderSurveyPage(req, res);
+    // let page = req.session.currentPage;
+    // let questions = req.session.questions;
+    // let questionid = questions[page].id
+    // let selectedChoice = req.session.selectedChoices[questionid]
+
+    // res.render("survey.ejs", {
+    //     question: questions[page].question,
+    //     options: questions[page].choices,
+    //     page: page + 1,
+    //     selectedChoice: selectedChoice === undefined ? -1 : selectedChoice,
+    //     username: req.cookies.username,
+    //     preference: req.cookies.preference,
+    //     prevFlag: page == 0 ? false : true
+    // })
 })
 
 app.get("/survey", function (req, res) {
 
-    let page = req.session.currentPage;
-    let questionid = questions[page].id
-    let selectedChoice = req.session.selectedChoices[questionid]
+    // let page = req.session.currentPage;
+    // let questions = req.session.questions;
+    // let questionid = questions[page].id
+    // let selectedChoice = req.session.selectedChoices[questionid]
 
-    res.render("survey.ejs", {
-        question: questions[page].question,
-        options: questions[page].choices,
-        page: page + 1,
-        selectedChoice: selectedChoice == undefined ? -1 : selectedChoice,
-        username: req.cookies.username,
-        preference: req.cookies.preference,
-        prevFlag: page == 0 ? false : true
-    })
+    // res.render("survey.ejs", {
+    //     question: questions[page].question,
+    //     options: questions[page].choices,
+    //     page: page + 1,
+    //     selectedChoice: selectedChoice == undefined ? -1 : selectedChoice,
+    //     username: req.cookies.username,
+    //     preference: req.cookies.preference,
+    //     prevFlag: page == 0 ? false : true
+    // })
+    renderSurveyPage(req, res)
 })
 
 app.get("/match", function (req, res) {
