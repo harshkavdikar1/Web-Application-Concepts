@@ -1,4 +1,4 @@
-const { retry } = require("async");
+// const { retry } = require("async");
 var express = require("express"),
     fs = require("fs"),
     bodyParser = require("body-parser"),
@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 // Initiate session cookies options
 app.use(session({
-    secret: 'magic',
+    secret: 'MAGICALEXPRESSKEY',
     resave: true,
     saveUninitialized: true,
     name: 'sessionid'
@@ -27,15 +27,15 @@ app.use(session({
 
 // Read the questions file to render questions to user
 var questions = {}
-
-var userInfo = {}
-
-fs.readFile("survey.json", "utf-8", function (error, data) {
-    questions = JSON.parse(data).questions;
+fs.readFile("survey.json", "utf-8", function (err, data) {
+    if (err)
+        console.log(err);
+    else
+        questions = JSON.parse(data).questions;
 });
 
 app.get("/", function (req, res) {
-    res.redirect("/landing")
+    res.redirect(307, "/landing")
 })
 
 app.get("/landing", function (req, res) {
@@ -45,93 +45,93 @@ app.get("/landing", function (req, res) {
 })
 
 app.post("/landing", function (req, res) {
-    let username = req.body.username
-    res.cookie("username", username);
 
-    if (req.cookies.preference == undefined)
-        res.cookie("preference", "horizontal");
+    res.cookie("username", req.body.username);
+    res.cookie("preference", req.cookies.preference == undefined ? "horizontal" : req.cookies.preference);
 
-    if (username in userInfo == false) {
-        userInfo[username] = {
-            currentPage: 0,
-            selectedChoices: {}
-        }
-    }
-    else {
-        userInfo[username].currentPage = 0
-    }
-
-    if (req.body.action == "survey")
+    if (req.body.action == "survey") {
+        req.session.currentPage = 0;
+        req.session.selectedChoices = {};
+        req.session.userName = req.body.username;
         res.redirect("/survey")
+        return
+    }
     else
         res.redirect("/match")
 })
 
-app.post("/survey", function (req, res) {
-    if (req.cookies.sessionid == undefined) {
-        res.redirect("/")
+app.use("/survey", function(req, res, next) {
+    if (req.session.userName === undefined) {
+        res.redirect("/landing")
         return
     }
+    else {
+        next();
+    }
+})
 
-    let username = req.cookies.username
 
-    // Set answer for the current question
-    let page = userInfo[username].currentPage;
-    let questionid = questions[page].id
-    userInfo[username].selectedChoices[questionid] = req.body.choice === undefined ? -1 : req.body.choice
-
+function prevQuestion(req, res, next) {
     if (req.body.action == "prev") {
-        userInfo[username].currentPage--;
+        req.session.currentPage--;
         res.redirect("/survey");
-        return;
     }
+    else
+        next()
+}
 
-    if (page == questions.length - 1) {
-        res.clearCookie("sessionid")
-        req.session.destroy();
-        res.render("finish.ejs")
-        // setTimeout(function() {
-        //     res.render("landing.ejs")
-        // },
-        // 10000);
-        return
+function setAnswer(req, res, next) {
+    let page = req.session.currentPage;
+    let questionid = questions[page].id;
+    req.session.selectedChoices[questionid] = req.body.choice === undefined ? -1 : req.body.choice;
+    next()
+}
+
+function sessionCompleteCheck(req, res, next) {
+    if (req.session.currentPage == questions.length - 1) {
+        req.session.destroy(function(err) {
+            if (err)
+                res.status(500).send("Error: 500 \n Message: Internal Server Error")
+            else
+                res.render("finish.ejs")
+            });
     }
+    else
+        next()
+}
+
+app.post("/survey", setAnswer, prevQuestion, sessionCompleteCheck, function (req, res) {
 
     // Get question info for next question
-    userInfo[username].currentPage++;
-    page = userInfo[username].currentPage;
-    questionid = questions[page].id
-
-    let preference = req.cookies.preference
-
-    let selectedChoice = userInfo[username].selectedChoices[questionid]
+    req.session.currentPage++;
+    let page = req.session.currentPage;
+    let questionid = questions[page].id
+    let selectedChoice = req.session.selectedChoices[questionid]
 
     res.render("survey.ejs", {
         question: questions[page].question,
         options: questions[page].choices,
         page: page + 1,
         selectedChoice: selectedChoice === undefined ? -1 : selectedChoice,
-        username: username,
-        preference: preference,
+        username: req.cookies.username,
+        preference: req.cookies.preference,
         prevFlag: page == 0 ? false : true
     })
 })
 
 app.get("/survey", function (req, res) {
 
-    let username = req.cookies.username
-    let preference = req.cookies.preference
-    let page = userInfo[username].currentPage;
+    let page = req.session.currentPage;
     let questionid = questions[page].id
-    let selectedChoice = userInfo[username].selectedChoices[questionid]
+    let selectedChoice = req.session.selectedChoices[questionid]
 
     res.render("survey.ejs", {
         question: questions[page].question,
         options: questions[page].choices,
         page: page + 1,
         selectedChoice: selectedChoice == undefined ? -1 : selectedChoice,
-        username: username,
-        preference: preference,
+        username: req.cookies.username,
+        preference: req.cookies.preference,
         prevFlag: page == 0 ? false : true
     })
 })
@@ -149,6 +149,15 @@ app.get("/preference", function (req, res) {
 app.post("/preference", function (req, res) {
     res.cookie("preference", req.body.preference);
     res.redirect("/survey");
+})
+
+app.all("*", function (req, res) {
+    res.status(404).send("Error: 404 <br> Message: Page not found")
+})
+
+app.use(function (err, req, res, next) {
+    console.error(err.stack)
+    res.status(500).send("Error: 500 <br> Message: Internal Server Error")
 })
 
 app.listen(3000)
