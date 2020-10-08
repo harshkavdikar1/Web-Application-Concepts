@@ -3,9 +3,12 @@ var express = require("express"),
     fs = require("fs"),
     bodyParser = require("body-parser"),
     cookieParser = require("cookie-parser"),
-    session = require('express-session');
-app = express();
+    session = require('express-session'),
+    model = require("./model");
 
+model.initializeDB()
+
+app = express();
 
 // Set it to set the tempalate engine
 app.set("view engine", "ejs");
@@ -50,12 +53,12 @@ function setCookies(req, res, next) {
 async function readSurvey() {
     return new Promise((resolve, reject) => {
         fs.readFile("survey.json", "utf-8", function (err, data) {
-          if (err) {
-            reject(err);
-          }
-          resolve(JSON.parse(data).questions);
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(data).questions);
         });
-      });
+    });
 }
 
 app.post("/landing", setCookies, async function (req, res) {
@@ -74,7 +77,7 @@ app.post("/landing", setCookies, async function (req, res) {
 })
 
 app.use("/survey", function(req, res, next) {
-    if (req.session.userName === undefined) {
+    if (req.session.userName == undefined) {
         res.redirect("/landing")
         return
     }
@@ -94,6 +97,7 @@ function setAnswer(req, res, next) {
 function sessionCompleteCheck(req, res, next) {
     let questions = req.session.questions;
     if (req.session.currentPage == questions.length - 1) {
+        model.insertRecords(req.session.userName, req.session.selectedChoices)
         req.session.destroy(function(err) {
             if (err)
                 res.status(500).send("Error: 500 \n Message: Internal Server Error")
