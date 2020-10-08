@@ -1,12 +1,9 @@
-// const { retry } = require("async");
 var express = require("express"),
     fs = require("fs"),
     bodyParser = require("body-parser"),
     cookieParser = require("cookie-parser"),
     session = require('express-session'),
     model = require("./model");
-
-model.initializeDB()
 
 app = express();
 
@@ -62,7 +59,6 @@ async function readSurvey() {
 }
 
 app.post("/landing", setCookies, async function (req, res) {
-    console.log(req.body.action)
     if (req.body.action == "survey") {
         req.session.currentPage = 0;
         let selectedChoices = await model.fetchAnswers(req.body.username).then(function(rows){
@@ -75,7 +71,6 @@ app.post("/landing", setCookies, async function (req, res) {
             }
             return answers
         })
-        console.log("Here=", selectedChoices)
         req.session.selectedChoices = selectedChoices == undefined ? {} : selectedChoices;
         req.session.userName = req.body.username;
         req.session.questions = await readSurvey();

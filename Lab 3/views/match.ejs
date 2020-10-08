@@ -4,7 +4,7 @@
         <p>Best survey matches for dsd best-to-worst:</p>
         <p>
             <ol>
-                <% for (i in rows) { row = rows[i];) %>
+                <% for (i in rows) { row = rows[i]; %>
                     <% if (row.matches != 0) {%>
                         <li>User: <%= row.username %> matched <%= row.matches %> answers</li>
                 <% } } %>

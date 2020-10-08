@@ -127,6 +127,8 @@ async function fetchallMatches() {
 
 // fetchallMatches()
 
+// initializeDB()
+
 exports.fetchMatches = fetchMatches
 exports.insertRecords = insertRecords
 exports.initializeDB = initializeDB
