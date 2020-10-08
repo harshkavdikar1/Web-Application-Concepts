@@ -14,7 +14,7 @@ async function getConnection() {
 async function initializeDB() {
     var db = await getConnection()
 
-    SQL_CREATE_TABLE_ANSWERS = `
+    let SQL_CREATE_TABLE_ANSWERS = `
         CREATE TABLE IF NOT EXISTS answers (
             username TEXT NOT NULL,
             questionid TEXT NOT NULL,
@@ -35,7 +35,7 @@ async function initializeDB() {
 async function insertUpdateData(username, questionid, choice) {
     var db = await getConnection()
 
-    SQL_INSERT_INTO_ANSWERS = `INSERT OR REPLACE INTO answers(username, questionid, choice) VALUES (?, ? , ?)`
+    let SQL_INSERT_INTO_ANSWERS = `INSERT OR REPLACE INTO answers(username, questionid, choice) VALUES (?, ? , ?)`
 
     db.run(SQL_INSERT_INTO_ANSWERS, username, questionid, choice, function (err) {
         if (err) {
@@ -58,46 +58,51 @@ async function insertRecords(username, questions) {
 async function fetchMatches(username) {
     var db = await getConnection()
 
-    SQL_QUERY_USER_MATCHES = `
-        SELECT a2.username, count(a2.choice) AS matches
-        FROM answers a1
-        INNER JOIN answers  a2
-        ON a1.username <> a2.username
-        AND a1.questionid = a2.questionid
-        AND a1.choice = a2.choice
-        WHERE a1.username = ?
-        GROUP BY a2.username
+    let SQL_QUERY_USER_MATCHES = `
+        SELECT * FROM (
+            SELECT a2.username, count(a2.choice) AS matches
+            FROM answers a1
+            INNER JOIN answers  a2
+            ON a1.username <> a2.username
+            AND a1.questionid = a2.questionid
+            AND a1.choice = a2.choice
+            WHERE a1.username = ?
+            GROUP BY a2.username
+        ) 
+        ORDER BY matches DESC
     `
 
-    db.all(SQL_QUERY_USER_MATCHES, username, function (err, row) {
-        if (err) {
-            console.log(err)
-            throw err
-        }
-        else
-            return row
+    return new Promise(function(resolve, reject) {
+        db.all(SQL_QUERY_USER_MATCHES, username, function(err, rows)  {
+            if(err) reject("Read error: " + err.message)
+            else {
+                resolve(rows)
+            }
+        })
     })
 
-    db.close()
+    // db.all(SQL_QUERY_USER_MATCHES, username, function (err, row) {
+    //     if (err) {
+    //         console.log(err)
+    //         throw err
+    //     }
+    //     else
+    //         return row
+    // })
+
+    // db.close()
 }
 
 async function fetchAnswers(username) {
-    var db = await getConnection()
-
-    SQL_QUERY_USER_MATCHES = `
-        SELECT * FROM answers where username = ?
-    `
-
-    db.all(SQL_QUERY_USER_MATCHES, username, function (err, row) {
-        if (err) {
-            console.log(err)
-            throw err
-        }
-        else
-            return row
+    let db = await getConnection()
+    return new Promise(function(resolve, reject) {
+        db.all(`SELECT * FROM answers where username = ?`, username, function(err, rows)  {
+            if(err) reject("Read error: " + err.message)
+            else {
+                resolve(rows)
+            }
+        })
     })
-
-    db.close()
 }
 
 
@@ -120,8 +125,9 @@ async function fetchallMatches() {
     db.close()
 }
 
-fetchallMatches()
+// fetchallMatches()
 
 exports.fetchMatches = fetchMatches
 exports.insertRecords = insertRecords
 exports.initializeDB = initializeDB
+exports.fetchAnswers = fetchAnswers

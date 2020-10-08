@@ -62,16 +62,28 @@ async function readSurvey() {
 }
 
 app.post("/landing", setCookies, async function (req, res) {
+    console.log(req.body.action)
     if (req.body.action == "survey") {
         req.session.currentPage = 0;
-        req.session.selectedChoices = {};
+        let selectedChoices = await model.fetchAnswers(req.body.username).then(function(rows){
+            let answers = {};
+            let i = 0;
+            let row;
+            for (i = 0; i < rows.length; i++) {
+                row = rows[i];
+                answers[row.questionid] = row.choice;
+            }
+            return answers
+        })
+        console.log("Here=", selectedChoices)
+        req.session.selectedChoices = selectedChoices == undefined ? {} : selectedChoices;
         req.session.userName = req.body.username;
         req.session.questions = await readSurvey();
         res.redirect("/survey")
         return
     }
     else if (req.body.action == "match")
-        res.redirect("/match")
+        res.redirect(307, "/match")
     else
         res.redirect("/landing")
 })
@@ -138,8 +150,10 @@ app.get("/survey", function (req, res) {
     renderSurveyPage(req, res)
 })
 
-app.get("/match", function (req, res) {
-    res.send("match")
+app.post("/match", async function (req, res) {
+    let username = req.body.username
+    var rows = await model.fetchMatches(username)
+    res.render("match.ejs", {rows: rows})
 })
 
 app.get("/preference", function (req, res) {
