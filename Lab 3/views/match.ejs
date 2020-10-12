@@ -1,13 +1,17 @@
 <html>
-
+    <head>
+        <title>MVC Ex Solution Landing Page</title>
+    </head>
     <body>
-        <p>Best survey matches for dsd best-to-worst:</p>
+        <p>Best survey matches for <%= username %> best-to-worst:</p>
+        <% if (rows.length == 0) {%>
+            <p>There were no matches for <%= username %>.</p>
+        <% } %>
         <p>
             <ol>
                 <% for (i in rows) { row = rows[i]; %>
-                    <% if (row.matches != 0) {%>
-                        <li>User: <%= row.username %> matched <%= row.matches %> answers</li>
-                <% } } %>
+                    <li>User: <%= row.username %> matched <%= row.matches %> answers</li>
+                <% } %>
             </ol>
         </p>
     </body>

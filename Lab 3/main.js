@@ -1,5 +1,4 @@
 var express = require("express"),
-    fs = require("fs"),
     bodyParser = require("body-parser"),
     cookieParser = require("cookie-parser"),
     session = require('express-session'),
@@ -25,7 +24,7 @@ app.use(session({
     name: 'sessionid'
 }));
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     next()
 })
@@ -46,34 +45,13 @@ function setCookies(req, res, next) {
     next()
 }
 
-// Read the questions file to render questions to user
-async function readSurvey() {
-    return new Promise((resolve, reject) => {
-        fs.readFile("survey.json", "utf-8", function (err, data) {
-            if (err) {
-                reject(err);
-            }
-            resolve(JSON.parse(data).questions);
-        });
-    });
-}
-
 app.post("/landing", setCookies, async function (req, res) {
     if (req.body.action == "survey") {
         req.session.currentPage = 0;
-        let selectedChoices = await model.fetchAnswers(req.body.username).then(function(rows){
-            let answers = {};
-            let i = 0;
-            let row;
-            for (i = 0; i < rows.length; i++) {
-                row = rows[i];
-                answers[row.questionid] = row.choice;
-            }
-            return answers
-        })
+        let selectedChoices = await model.fetchAnswers(req.body.username)
         req.session.selectedChoices = selectedChoices == undefined ? {} : selectedChoices;
         req.session.userName = req.body.username;
-        req.session.questions = await readSurvey();
+        req.session.questions = await model.readSurvey();
         res.redirect("/survey")
         return
     }
@@ -83,7 +61,7 @@ app.post("/landing", setCookies, async function (req, res) {
         res.redirect("/landing")
 })
 
-app.use("/survey", function(req, res, next) {
+app.use("/survey", function (req, res, next) {
     if (req.session.userName == undefined) {
         res.redirect("/landing")
         return
@@ -105,12 +83,12 @@ function sessionCompleteCheck(req, res, next) {
     let questions = req.session.questions;
     if (req.session.currentPage == questions.length - 1) {
         model.insertRecords(req.session.userName, req.session.selectedChoices)
-        req.session.destroy(function(err) {
+        req.session.destroy(function (err) {
             if (err)
                 res.status(500).send("Error: 500 \n Message: Internal Server Error")
             else
                 res.render("finish.ejs")
-            });
+        });
     }
     else
         next()
@@ -148,7 +126,7 @@ app.get("/survey", function (req, res) {
 app.post("/match", async function (req, res) {
     let username = req.body.username
     var rows = await model.fetchMatches(username)
-    res.render("match.ejs", {rows: rows})
+    res.render("match.ejs", { rows: rows, username: username })
 })
 
 app.get("/preference", function (req, res) {
