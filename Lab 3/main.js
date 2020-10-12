@@ -34,7 +34,7 @@ app.get("/", function (req, res) {
 })
 
 app.get("/landing", function (req, res) {
-    res.render("landing.ejs", {
+    res.render("landing", {
         username: req.cookies.username == undefined ? "" : req.cookies.username
     })
 })
@@ -87,7 +87,7 @@ function sessionCompleteCheck(req, res, next) {
             if (err)
                 res.status(500).send("Error: 500 \n Message: Internal Server Error")
             else
-                res.render("finish.ejs")
+                res.render("finish")
         });
     }
     else
@@ -100,7 +100,7 @@ function renderSurveyPage(req, res) {
     let questionid = questions[page].id
     let selectedChoice = req.session.selectedChoices[questionid]
 
-    res.render("survey.ejs", {
+    res.render("survey", {
         question: questions[page].question,
         options: questions[page].choices,
         page: page + 1,
@@ -126,11 +126,11 @@ app.get("/survey", function (req, res) {
 app.post("/match", async function (req, res) {
     let username = req.body.username
     var rows = await model.fetchMatches(username)
-    res.render("match.ejs", { rows: rows, username: username })
+    res.render("match", { rows: rows, username: username })
 })
 
 app.get("/preference", function (req, res) {
-    res.render("preference.ejs", {
+    res.render("preference", {
         preference: req.cookies.preference
     })
 })

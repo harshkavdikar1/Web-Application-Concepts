@@ -6,10 +6,8 @@ exports.readSurvey = async function () {
     return new Promise(function (resolve, reject) {
         fs.readFile("survey.json", "utf-8", function (err, data) {
             if (err) reject(err);
-            resolve();
+            resolve(JSON.parse(data).questions);
         });
-    }).then(function(data) {
-        return JSON.parse(data).questions
     }).catch(function (err) {
         console.log(err)
     })
