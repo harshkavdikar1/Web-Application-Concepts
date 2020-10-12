@@ -52,12 +52,7 @@ async function insertUpdateData(username, questionid, choice) {
     let SQL_INSERT_INTO_ANSWERS = `INSERT OR REPLACE INTO answers(username, questionid, choice) VALUES (?, ? , ?)`
 
     db.run(SQL_INSERT_INTO_ANSWERS, username, questionid, choice, function (err) {
-        if (err) {
-            console.log(err)
-            throw err
-        }
-        else
-            console.log(`Record inserted into table answers for user ${username} and question ${questionid}`)
+        if (err) console.log(err)
     })
 
     db.close()
