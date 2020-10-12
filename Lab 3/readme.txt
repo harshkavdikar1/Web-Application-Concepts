@@ -1,3 +1,6 @@
+Important :
+    1. For functionality of back button to work after submitting the survey please disable cache from network tab in browser's developer options
+    2. Delete all the cookies before starting application
 
 Username constraint have been implemented in HTML5
 
@@ -8,6 +11,8 @@ Modules Needed:
     4. express-session
     5. sqlite3
     6. ejs
+
+Persistent Storage Used: Embeded SQLite
 
 How to run the code:
     Step 1: install the dependencies

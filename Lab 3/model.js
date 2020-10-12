@@ -6,13 +6,19 @@ exports.readSurvey = async function () {
     return new Promise(function (resolve, reject) {
         fs.readFile("survey.json", "utf-8", function (err, data) {
             if (err) reject(err);
-            resolve(JSON.parse(data).questions);
+            resolve();
         });
+    }).then(function(data) {
+        return JSON.parse(data).questions
     }).catch(function (err) {
         console.log(err)
     })
 }
 
+/**
+ * Establishs connection to database
+ * Returns the database connections
+ */
 async function getConnection() {
     return new Promise(function (resolve, reject) {
         var db = new sqlite3.Database('./db/survey.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, function (err) {
@@ -24,7 +30,10 @@ async function getConnection() {
     })
 }
 
-
+/**
+ * Migrate the database
+ * Creates the table
+ */
 async function initializeDB() {
     let db = await getConnection()
 
@@ -45,7 +54,12 @@ async function initializeDB() {
     db.close()
 }
 
-
+/**
+ * Insert the data in the Table
+ * @param {String} username 
+ * @param {String} questionid 
+ * @param {String} choice 
+ */
 async function insertUpdateData(username, questionid, choice) {
     var db = await getConnection()
 
@@ -58,12 +72,22 @@ async function insertUpdateData(username, questionid, choice) {
     db.close()
 }
 
+/**
+ * Iterate over records and send records to database
+ * @param {String} username 
+ * @param {Object} questions 
+ */
 exports.insertRecords = async function (username, questions) {
     for (quesionid in questions) {
         insertUpdateData(username, quesionid, questions[quesionid])
     }
 }
 
+/**
+ * Fetch all the matches for the current user
+ * @param {String} username 
+ * @return {Object} rows      Returns username and matched answers
+ */
 exports.fetchMatches = async function (username) {
     return new Promise(async function (resolve, reject) {
         let db = await getConnection()
@@ -88,6 +112,11 @@ exports.fetchMatches = async function (username) {
     })
 }
 
+/**
+ * Fetch answers for the user
+ * @param {String} username 
+ * @return {Object} answers     Return the object of questionid and selected choice
+ */
 exports.fetchAnswers = async function (username) {
     return new Promise(async function (resolve, reject) {
         let db = await getConnection()
