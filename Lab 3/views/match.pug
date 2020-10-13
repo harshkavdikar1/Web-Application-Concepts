@@ -1,0 +1,12 @@
+doctype html
+html(lang="en")
+    head
+        title MVC Ex Solution Landing Page
+    body
+        p Best survey matches for #{username} best-to-worst:
+        if rows.length == 0
+            p There were no matches for #{username}.
+        p
+            ol
+                for row in rows
+                    li User: #{row.username} matched #{row.matches} answers

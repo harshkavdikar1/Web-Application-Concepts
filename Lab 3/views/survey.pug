@@ -1,0 +1,21 @@
+doctype html
+html(lang="en")
+    head
+        title MVC Ex Solution Landing Page
+    body
+        form(method="POST")
+            p  Survey page: #{page} for user #{username}
+            p #{question}
+            p 
+                a(href="/preference") Set your rendering preferences
+            p
+                for option, index in options
+                    input(type="radio", name="choice", value=index, checked=index==selectedChoice) 
+                    | #{option.choice}
+                    if preference == "vertical"
+                        br
+            p
+                if prevFlag == true
+                    input(type="submit", name="action", value="prev")
+                    | 
+                input(type="submit", name="action", value="next")

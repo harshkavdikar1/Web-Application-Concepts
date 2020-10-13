@@ -2,12 +2,14 @@ var express = require("express"),
     bodyParser = require("body-parser"),
     cookieParser = require("cookie-parser"),
     session = require('express-session'),
+    pug = require("pug"),
     model = require("./model");
 
 app = express();
 
 // Set it to set the tempalate engine
-app.set("view engine", "ejs");
+var tempalateEngine = process.argv[2] == undefined ? "ejs" :  process.argv[2]
+app.set("view engine", tempalateEngine);
 
 // required for parsing the payload
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -81,7 +83,7 @@ function setAnswer(req, res, next) {
 
 function sessionCompleteCheck(req, res, next) {
     let questions = req.session.questions;
-    if (req.session.currentPage == questions.length - 1) {
+    if (req.body.action != "prev" && req.session.currentPage == questions.length - 1) {
         model.insertRecords(req.session.userName, req.session.selectedChoices)
         req.session.destroy(function (err) {
             if (err)
