@@ -8,11 +8,21 @@ var answerMurderer = "";
 var answerRoom = "";
 var answerWeapon = "";
 
-var userCards = {rooms: [], weapons: [], suspects: []}
-var computerCards = {rooms: [], weapons: [], suspects: []}
+var userCards = { rooms: [], weapons: [], suspects: [] }
+var computerCards = { rooms: [], weapons: [], suspects: [] }
+
+if (!localStorage.wins)
+    localStorage.wins = 0
+
+if (!localStorage.loss)
+    localStorage.loss = 0
+
+if (!localStorage.history)
+    localStorage.history = ""
 
 function displayConstants() {
     let constants = document.getElementById("constants");
+
     constants.innerHTML = "Rooms: " + rooms.join(", ") + "</br>" +
         "Guests: " + suspects.join(", ") + "</br>" +
         "Weapons: " + weapons.join(", ") + "</br>"
@@ -22,7 +32,7 @@ function displayConstants() {
     document.getElementById("guess").disabled = true;
 }
 
-function renderChoices(rooms, suspects, weapons){
+function renderChoices(rooms, suspects, weapons) {
     let guessRooms = document.getElementById("rooms");
     guessRooms.innerHTML = ""
     for (i in rooms)
@@ -61,14 +71,18 @@ function startGame() {
 
     console.log(choices)
 
-    let  i = 0
+    sessionStorage.history = ""
+    sessionStorage.name = name
+
+
+    let i = 0
     let size = choices.length
 
-    while (i < size/2) {
+    while (i < size / 2) {
         let card = Math.floor(Math.random() * choices.length);
         card = choices.splice(card, 1)[0];
 
-        if (card==answerMurderer || card==answerRoom || card==answerWeapon) {
+        if (card == answerMurderer || card == answerRoom || card == answerWeapon) {
             choices.push(card);
             continue;
         }
@@ -91,7 +105,7 @@ function startGame() {
     for (c in choices) {
         card = choices[c];
 
-        if (card==answerMurderer || card==answerRoom || card==answerWeapon) {
+        if (card == answerMurderer || card == answerRoom || card == answerWeapon) {
             continue;
         }
 
@@ -112,10 +126,10 @@ function startGame() {
     console.log("Computer Cards = ", computerCards)
 
     let userdetails = document.getElementById("userdetails");
-    userdetails.innerHTML = "Welcome " + name + ", you hold the cards for " + 
-                        userCards.rooms.join(", ") + ", " + 
-                        userCards.suspects.join(", ") + ", " +
-                        userCards.weapons.join(", ");
+    userdetails.innerHTML = "Welcome " + name + ", you hold the cards for " +
+        userCards.rooms.join(", ") + ", " +
+        userCards.suspects.join(", ") + ", " +
+        userCards.weapons.join(", ");
 
     computerCards.rooms.push(answerRoom);
     computerCards.suspects.push(answerMurderer);
@@ -131,23 +145,26 @@ function userGuess() {
     document.getElementById("guess").disabled = true;
 
     var selectedRoom = document.getElementById("rooms").value
+    var selectedSuspect = document.getElementById("suspects").value
+    var selectedWeapon = document.getElementById("weapons").value
 
-    if (selectedRoom!=answerRoom) {
+    let guessDetails = "User selected room = " + selectedRoom +
+        ", suspect = " + selectedSuspect +
+        " and weapon = " + selectedWeapon;
+
+    sessionStorage.history += guessDetails + "<br>"
+
+    if (selectedRoom != answerRoom) {
         continueGame(selectedRoom);
         return
     }
 
-    var selectedSuspect = document.getElementById("suspects").value
-
-    if (selectedSuspect!=answerMurderer) {
+    if (selectedSuspect != answerMurderer) {
         continueGame(selectedSuspect);
         return;
     }
-        
 
-    var selectedWeapon = document.getElementById("weapons").value
-
-    if (selectedWeapon!=answerWeapon) {
+    if (selectedWeapon != answerWeapon) {
         continueGame(selectedWeapon);
         return;
     }
@@ -155,8 +172,16 @@ function userGuess() {
     let continueG = document.getElementById("continueGame")
 
     continueG.innerHTML += "That was the correct guess! " + selectedSuspect +
-                             " did it with the " + selectedWeapon + 
-                             " in the " + selectedRoom + "! <br>"
+        " did it with the " + selectedWeapon +
+        " in the " + selectedRoom + "! <br>"
+
+    let gameInfo = "Computer played against " + sessionStorage.name +
+    " on " + (new Date()).toString() +
+    " and the game was won by " + sessionStorage.name + " <br>"
+
+    localStorage.history += gameInfo
+
+    localStorage.loss++;
 
     continueG.innerHTML += "Click to start a new game: <Button onclick='restartGame()'>New Game</Button>"
 
@@ -167,7 +192,7 @@ function continueGame(card) {
     let continueG = document.getElementById("continueGame");
 
     continueG.innerHTML = continueG.innerHTML + "<br> Sorry that was an incorrect guess! The Computer holds the card for " + card + ".<br>"
-    continueG.innerHTML += "<div id='continueButton'>Click to continue: <Button onclick='computerGuess()'>Continue </Button></div>" 
+    continueG.innerHTML += "<div id='continueButton'>Click to continue: <Button onclick='computerGuess()'>Continue </Button></div>"
 }
 
 function resetGame(card) {
@@ -185,25 +210,33 @@ function computerGuess() {
     let selectedRoom = userCards.rooms[Math.floor(Math.random() * userCards.rooms.length)];
     userCards.rooms.pop()
 
-    if (selectedRoom!=answerRoom) {
-        resetGame(selectedRoom);
-        return
-    }
-
     userCards.suspects.push(answerMurderer)
     var selectedSuspect = userCards.suspects[Math.floor(Math.random() * userCards.suspects.length)];
     userCards.suspects.pop()
-
-    if (selectedSuspect!=answerMurderer) {
-        resetGame(selectedSuspect);
-        return;
-    }
 
     userCards.weapons.push(answerWeapon)
     var selectedWeapon = userCards.weapons[Math.floor(Math.random() * userCards.weapons.length)];
     userCards.weapons.pop()
 
-    if (selectedWeapon!=answerWeapon) {
+    let guessDetails = "Computer selected room = " + selectedRoom +
+        ", suspect = " + selectedSuspect +
+        " and weapon = " + selectedWeapon;
+
+    sessionStorage.history += guessDetails + "<br>"
+
+    console.log("Guess = ", sessionStorage.history)
+
+    if (selectedRoom != answerRoom) {
+        resetGame(selectedRoom);
+        return
+    }
+
+    if (selectedSuspect != answerMurderer) {
+        resetGame(selectedSuspect);
+        return;
+    }
+
+    if (selectedWeapon != answerWeapon) {
         resetGame(selectedWeapon);
         return;
     }
@@ -212,10 +245,18 @@ function computerGuess() {
     document.getElementById("continueButton").remove();
 
     continueG.innerHTML += "That was the correct guess! " + selectedSuspect +
-                             " did it with the " + selectedWeapon + 
-                             " in the " + selectedRoom + "! <br>"
+        " did it with the " + selectedWeapon +
+        " in the " + selectedRoom + "! <br>"
 
-    continueG.innerHTML += "Click to start a new game: <Button onclick='restartGame()'>New Game</Button>" 
+    let gameInfo = "Computer played against " + sessionStorage.name +
+    " on " + (new Date()).toString() +
+    " and the game was won by Computer <br>"
+
+    localStorage.history += gameInfo
+
+    localStorage.wins++;
+
+    continueG.innerHTML += "Click to start a new game: <Button onclick='restartGame()'>New Game</Button>"
 }
 
 function guessAgain() {
@@ -225,27 +266,49 @@ function guessAgain() {
 
 
 function restartGame() {
-    
+
+    sessionStorage.clear();
+
     answerMurderer = "";
     answerRoom = "";
     answerWeapon = "";
 
-    userCards = {rooms: [], weapons: [], suspects: []}
-    computerCards = {rooms: [], weapons: [], suspects: []}   
+    userCards = { rooms: [], weapons: [], suspects: [] }
+    computerCards = { rooms: [], weapons: [], suspects: [] }
 }
 
 function showHistory() {
     historyButton = document.getElementById("historyButton")
     historyButton.innerHTML = "Hide History"
     historyButton.setAttribute("onclick", "hideHistory()")
+
+    historyInfo = document.getElementById("history");
+    historyInfo.innerHTML = sessionStorage.getItem("history")
 }
 
 function hideHistory() {
     historyButton = document.getElementById("historyButton")
     historyButton.innerHTML = "Show History"
     historyButton.setAttribute("onclick", "showHistory()")
+    document.getElementById("history").innerHTML = ""
 }
 
 function showRecord() {
-    console.log("here inside show records")
+    recordButton = document.getElementById("recordButton")
+    recordButton.innerHTML = "Hide Record"
+    recordButton.setAttribute("onclick", "hideRecord()")
+
+    let history = localStorage.history != undefined ? localStorage.history : "";
+    recordInfo = document.getElementById("record");
+    recordInfo.innerHTML = 'Computer has ' + localStorage.wins + ' wins and ' + localStorage.loss + ' losses <br>' +
+        history;
+}
+
+
+function hideRecord() {
+    recordButton = document.getElementById("recordButton")
+    recordButton.innerHTML = "Show Record"
+    recordButton.setAttribute("onclick", "showRecord()")
+
+    document.getElementById("record").innerHTML = "";
 }
