@@ -2,6 +2,15 @@ const rooms = ["Kitchen", "Ballroom", "Conservatory", "Billiard Room", "Library"
 const suspects = ["Mrs. Peacock", "Mrs. Green", "Miss Scarlet", "Colonel Mustard", "Professor Plum", "Mrs. White"]
 const weapons = ["Pistol", "Knife", "Wrench", "Lead Pipe", "Candlestick", "Rope"]
 
+var moves = []
+
+var answerMurderer = "";
+var answerRoom = "";
+var answerWeapon = "";
+
+var userCards = {rooms: [], weapons: [], suspects: []}
+var computerCards = {rooms: [], weapons: [], suspects: []}
+
 function displayConstants() {
     let constants = document.getElementById("constants");
     constants.innerHTML = "Rooms: " + rooms.join(", ") + "</br>" +
@@ -39,91 +48,204 @@ function createOptionsElement(childValue) {
 
 function startGame() {
     let name = document.getElementById("username").value;
-    let userdetails = document.getElementById("userdetails");
-    userdetails.innerHTML = "Welcome " + name;
+
     document.getElementById("guess").disabled = false;
-    document.getElementById("showHistory").disabled = false;
+    document.getElementById("historyButton").disabled = false;
 
-    var answerMurderer = suspects[Math.floor(Math.random() * suspects.length)];
-    var answerRoom = rooms[Math.floor(Math.random() * rooms.length)];
-    var answerWeapon = weapons[Math.floor(Math.random() * weapons.length)];
+    answerMurderer = suspects[Math.floor(Math.random() * suspects.length)];
+    answerRoom = rooms[Math.floor(Math.random() * rooms.length)];
+    answerWeapon = weapons[Math.floor(Math.random() * weapons.length)];
 
-    var userCards = {rooms: rooms.slice(), weapons: weapons.slice(), suspects: suspects.slice()}
-    var computerCards = {rooms: [], weapons: [], suspects: []}
+    var choices = suspects.concat(rooms);
+    choices = choices.concat(weapons);
 
-    userCards.suspects.pop(answerMurderer);
-    userCards.rooms.pop(answerRoom);
-    userCards.weapons.pop(answerWeapon);
+    console.log(choices)
 
-    var choices = userCards.suspects.concat(userCards.rooms);
-    choices = choices.concat(userCards.weapons);
+    let  i = 0
+    let size = choices.length
 
-    for (var i = 0; i < 9; i++) {
-        let card = choices[Math.floor(Math.random() * choices.length)];
-        choices.pop(card);
-        if (userCards.rooms.includes(card)) {
-            userCards.rooms.pop(card);
+    while (i < size/2) {
+        let card = Math.floor(Math.random() * choices.length);
+        card = choices.splice(card, 1)[0];
+
+        if (card==answerMurderer || card==answerRoom || card==answerWeapon) {
+            choices.push(card);
+            continue;
+        }
+        i++;
+        if (rooms.includes(card)) {
             computerCards.rooms.push(card)
         }
-            
-        if (userCards.weapons.includes(card)) {
-            userCards.weapons.pop(card);
+
+        if (weapons.includes(card)) {
             computerCards.weapons.push(card)
         }
+
         if (suspects.includes(card)) {
-            userCards.suspects.pop(card);
             computerCards.suspects.push(card)
-        }   
+        }
     }
 
-    // console.log(rooms, weapons, suspects)
-    // console.log(userCards)
-    // console.log(computerCards)
+    console.log(choices)
 
-    renderChoices(userCards.rooms, userCards.suspects, userCards.weapons)
-}
+    for (c in choices) {
+        card = choices[c];
 
+        if (card==answerMurderer || card==answerRoom || card==answerWeapon) {
+            continue;
+        }
 
-function showHistory() {
-    historyToggle = document.getElementById("showHistory")
-    if (historyToggle == "Show History")
-        document.getElementById("showHistory").innerHTML = "Hide History"
-    else
-        document.getElementById("showHistory").innerHTML = "Show History"
-}
+        if (rooms.includes(card)) {
+            userCards.rooms.push(card)
+        }
 
-function showRecord() {
-    console.log("here inside show records")
+        if (weapons.includes(card)) {
+            userCards.weapons.push(card)
+        }
+
+        if (suspects.includes(card)) {
+            userCards.suspects.push(card)
+        }
+    }
+
+    console.log("User cards = ", userCards)
+    console.log("Computer Cards = ", computerCards)
+
+    let userdetails = document.getElementById("userdetails");
+    userdetails.innerHTML = "Welcome " + name + ", you hold the cards for " + 
+                        userCards.rooms.join(", ") + ", " + 
+                        userCards.suspects.join(", ") + ", " +
+                        userCards.weapons.join(", ");
+
+    computerCards.rooms.push(answerRoom);
+    computerCards.suspects.push(answerMurderer);
+    computerCards.weapons.push(answerWeapon);
+    renderChoices(computerCards.rooms, computerCards.suspects, computerCards.weapons)
+    computerCards.rooms.pop();
+    computerCards.suspects.pop();
+    computerCards.weapons.pop();
 }
 
 function userGuess() {
-    console.log("ikr")
+
+    document.getElementById("guess").disabled = true;
+
     var selectedRoom = document.getElementById("rooms").value
 
-    if (selectedRoom!=answerRoom)
-        continueGame(selectedRoom)
+    if (selectedRoom!=answerRoom) {
+        continueGame(selectedRoom);
+        return
+    }
 
     var selectedSuspect = document.getElementById("suspects").value
 
-    if (selectedSuspect!=answerMurderer)
-        continueGame(selectedSuspect)
+    if (selectedSuspect!=answerMurderer) {
+        continueGame(selectedSuspect);
+        return;
+    }
+        
 
     var selectedWeapon = document.getElementById("weapons").value
 
-    if (selectedWeapon!=answerWeapon)
-        continueGame(selectedWeapon)
+    if (selectedWeapon!=answerWeapon) {
+        continueGame(selectedWeapon);
+        return;
+    }
 
-    let gameBoard = document.getElementById("gameBoard")
+    let continueG = document.getElementById("continueGame")
 
-    gameBoard.innerHTML += "That was the correct guess! " + selectedSuspect +
+    continueG.innerHTML += "That was the correct guess! " + selectedSuspect +
                              " did it with the " + selectedWeapon + 
-                             " in the " + selectedRoom + "!"
+                             " in the " + selectedRoom + "! <br>"
+
+    continueG.innerHTML += "Click to start a new game: <Button onclick='restartGame()'>New Game</Button>"
 
 }
 
 
 function continueGame(card) {
-    let gameBoard = document.getElementById("gameBoard")
-    gameBoard.innerHTML += "Sorry that was an incorrect guess! The Computer holds the card for " + card + "."
-    gameBoard.innerHTML += "Click to continue: <Button>Continue </Button>" 
+    let continueG = document.getElementById("continueGame");
+
+    continueG.innerHTML = continueG.innerHTML + "<br> Sorry that was an incorrect guess! The Computer holds the card for " + card + ".<br>"
+    continueG.innerHTML += "<div id='continueButton'>Click to continue: <Button onclick='computerGuess()'>Continue </Button></div>" 
+}
+
+function resetGame(card) {
+    document.getElementById("continueButton").remove();
+    let continueG = document.getElementById("continueGame");
+
+    continueG.innerHTML = continueG.innerHTML + "The Computer made an incorrect guess! You holds the card for " + card + ".<br>"
+    continueG.innerHTML += "Click to continue: <Button onclick='guessAgain()'>Continue </Button>"
+}
+
+
+function computerGuess() {
+
+    userCards.rooms.push(answerRoom)
+    let selectedRoom = userCards.rooms[Math.floor(Math.random() * userCards.rooms.length)];
+    userCards.rooms.pop()
+
+    if (selectedRoom!=answerRoom) {
+        resetGame(selectedRoom);
+        return
+    }
+
+    userCards.suspects.push(answerMurderer)
+    var selectedSuspect = userCards.suspects[Math.floor(Math.random() * userCards.suspects.length)];
+    userCards.suspects.pop()
+
+    if (selectedSuspect!=answerMurderer) {
+        resetGame(selectedSuspect);
+        return;
+    }
+
+    userCards.weapons.push(answerWeapon)
+    var selectedWeapon = userCards.weapons[Math.floor(Math.random() * userCards.weapons.length)];
+    userCards.weapons.pop()
+
+    if (selectedWeapon!=answerWeapon) {
+        resetGame(selectedWeapon);
+        return;
+    }
+
+    let continueG = document.getElementById("continueGame")
+    document.getElementById("continueButton").remove();
+
+    continueG.innerHTML += "That was the correct guess! " + selectedSuspect +
+                             " did it with the " + selectedWeapon + 
+                             " in the " + selectedRoom + "! <br>"
+
+    continueG.innerHTML += "Click to start a new game: <Button onclick='restartGame()'>New Game</Button>" 
+}
+
+function guessAgain() {
+    document.getElementById("guess").disabled = false;
+    document.getElementById("continueGame").innerHTML = ""
+}
+
+
+function restartGame() {
+    
+    answerMurderer = "";
+    answerRoom = "";
+    answerWeapon = "";
+
+    userCards = {rooms: [], weapons: [], suspects: []}
+    computerCards = {rooms: [], weapons: [], suspects: []}   
+}
+
+function showHistory() {
+    historyButton = document.getElementById("historyButton")
+    historyButton.innerHTML = "Hide History"
+    historyButton.setAttribute("onclick", "hideHistory()")
+}
+
+function hideHistory() {
+    historyButton = document.getElementById("historyButton")
+    historyButton.innerHTML = "Show History"
+    historyButton.setAttribute("onclick", "showHistory()")
+}
+
+function showRecord() {
+    console.log("here inside show records")
 }

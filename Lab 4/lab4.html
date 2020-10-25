@@ -20,10 +20,12 @@
             <label for="weapons">Guest Weapon:</label>
             <select id="weapons"></select>
             <br>
-            <input type="submit" id="guess" value="Guess" onclick="userGuess()">
-            <p id="dummy"></p>
+            <button id="guess" onclick="userGuess()" disabled>Guess</button>
+            <div id = "continueGame"></div>
         </form>
-        <button id="showHistory" onclick="showHistory()" disabled>Show History</button>
+        <button id="historyButton" onclick="showHistory()" disabled>Show History</button>
         <button id="showRecord" onclick="showRecord()">Show Record</button>
+        <div id="history"></div>
+        <div id="record"></div>
     </body>
 </html>
