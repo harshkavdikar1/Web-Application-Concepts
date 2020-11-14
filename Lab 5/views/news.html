@@ -36,7 +36,7 @@
                     Role: ${sessionStorage.role} </br></br>
                     `
                 if (sessionStorage.role == "author")
-                    document.getElementById("content").innerHTML += `<p><input type="submit" value='Create' onclick='renderCreateNewsForm()'></p> </br></br>`
+                    content += `<p><input type="submit" value='Create' onclick='renderCreateNewsForm()'></p> </br></br>`
                 sessionStorage.stories = JSON.stringify(payload['stories'])
 
                 for (story of payload['stories']) {
