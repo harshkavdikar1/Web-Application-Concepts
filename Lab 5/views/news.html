@@ -33,8 +33,10 @@
             }).then(function (payload) {
                 let content = `
                     User Name: ${sessionStorage.username} </br>
-                    Role: ${sessionStorage.role} </br></br></br></br>
+                    Role: ${sessionStorage.role} </br></br>
                     `
+                if (sessionStorage.role == "author")
+                    document.getElementById("content").innerHTML += `<p><input type="submit" value='Create' onclick='renderCreateNewsForm()'></p> </br></br>`
                 sessionStorage.stories = JSON.stringify(payload['stories'])
 
                 for (story of payload['stories']) {
@@ -55,8 +57,6 @@
                     }
                 }
                 document.getElementById("content").innerHTML = content
-                if (sessionStorage.role == "author")
-                    document.getElementById("content").innerHTML += `<p><input type="submit" value='Create' onclick='renderCreateNewsForm()'></p>`
                 document.getElementById("content").innerHTML += `<p><input type="submit" value="logout" onclick="logout()"></p>`
             }).catch(function (err) {
                 if (err == "error401")
@@ -66,7 +66,7 @@
             })
         }
 
-        function showNews(id) {
+        function showNews(id, flag = false) {
             let story;
 
             for (s of JSON.parse(sessionStorage.stories)) {
@@ -75,6 +75,7 @@
                     break
                 }
             }
+
             document.getElementById("content").innerHTML = `
                     User Name: ${sessionStorage.username} </br>
                     Role: ${sessionStorage.role} </br></br></br></br>
@@ -90,6 +91,10 @@
             document.getElementById("content").innerHTML += `<p><input type="button" value="Go Back" onclick="renderNewsPage()"></p>`
 
             document.getElementById("content").innerHTML += `<p><input type="button" value="Logout" onclick="logout()"></p>`
+
+            if (flag == true) {
+                document.getElementById("content").innerHTML = "<p>Error!! The story cannot be deleted</p></br>" + document.getElementById("content").innerHTML
+            }
         }
 
         function deleteNews(id) {
@@ -100,16 +105,15 @@
                 },
                 method: "DELETE"
             }).then(function (resp) {
-                if (resp.status == 401)
-                    throw "error401"
-                if (resp.status == 500)
-                    throw "error500"
+                if (resp.status != 200)
+                    throw "error" + resp.status
                 renderNewsPage()
             }).catch(function (err) {
                 if (err = "error401")
                     error401()
-                else
-                    error500()
+                else if (err = "error404")
+                    error404()
+                showNews(id, true)
             })
         }
 
@@ -189,7 +193,11 @@
                 `
         }
 
-
+        function error404() {
+            document.getElementById("content").innerHTML = `
+                    <p>Story does not exist <a href = '#' onclick=renderNewsPage()>here</a> to continue</p>
+                `
+        }
 
     </script>
 </body>

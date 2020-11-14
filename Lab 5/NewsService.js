@@ -70,6 +70,10 @@ function NewsService() {
      * @param  {String} title     title of news story
      */
     this.updateTitle = function (id, author, title) {
+        if (author == undefined || title == undefined) {
+            throw "error400"
+        }
+
         if (id in this.NewsStories == false) {
             throw "error404"
         }
@@ -79,6 +83,7 @@ function NewsService() {
         }
 
         this.NewsStories[id].title = title;
+        writeDataToStore(this.NewsStories);
     };
 
     /**
@@ -90,7 +95,7 @@ function NewsService() {
      * @param  {String} storyContent    story content of news story
      * @param  {String} date            published date of news story
      */
-    this.updatestoryContent = function (id, author, title, publicFlag, storyContent, date) {
+    this.updateStory = function (id, author, title, publicFlag, storyContent, date) {
         try {
             if (id in this.NewsStories == false) {
                 throw "error404"
@@ -113,19 +118,42 @@ function NewsService() {
     };
 
     /**
+     * Updates object of type NewsStory with the specified values
+     * @param  {Number} id              News Story Id
+     * @param  {String} author          author name
+     * @param  {String} storyContent    story content of news story
+     */
+    this.updatestoryContent = function (id, author, storyContent) {
+        if (author == undefined || storyContent == undefined) {
+            throw "error400"
+        }
+
+        if (id in this.NewsStories == false) {
+            throw "error404"
+        }
+
+        if (this.NewsStories[id].author != author) {
+            throw "error403"
+        }
+
+        this.NewsStories[id].storyContent = storyContent;
+        writeDataToStore(this.NewsStories);
+        }
+
+    /**
      * Deletes the object NewsStory whose id is provided
      * @param  {Number} id              News Story Id
      */
     this.deleteNewsStory = function (id) {
+        if (id in this.NewsStories == false) {
+            throw "error404";
+        }
         try {
-            if (id in this.NewsStories == false) {
-                throw "error404";
-            }
             delete this.NewsStories[id];
             writeDataToStore(this.NewsStories);
         }
         catch (err) {
-            throw err;
+            throw "error500";
         }
     };
 
@@ -137,7 +165,7 @@ function NewsService() {
      * @param  {String} startDate   published date of news story (date should be of format YYYY-MM-DD)
      * @return {Array}  stories     The result of the input operation
      */
-    this.filterNewsStory = function (title, author, startDate, endDate) {
+    this.filterNewsStory = function (author, title, startDate, endDate) {
         if (startDate != undefined || endDate != undefined) {
             startDate = startDate != undefined ? new Date(startDate) : new Date(1900, 1, 1);
             endDate = endDate != undefined ? new Date(endDate) : new Date(2999, 1, 1);

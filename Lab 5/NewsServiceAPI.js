@@ -13,11 +13,11 @@ app.use(bodyParser.json());
 
 var tokens = {}
 
-app.get("/", function(req, res) {
+app.get("/", function (req, res) {
     res.sendFile('/views/login.html', { root: __dirname });
 })
 
-app.get("/news", function(req, res) {
+app.get("/news", function (req, res) {
     res.sendFile('/views/news.html', { root: __dirname });
 })
 
@@ -37,7 +37,7 @@ app.post("/login", function (req, res) {
     }
 })
 
-app.use("*", function (req, res, next) {
+app.use(["/create", "/editTitle", "/editContent", "/search", "/delete", "/logout"], function (req, res, next) {
     let authorizationToken = req.headers["authorization"]
     let token = tokens[authorizationToken]
     if (token == undefined || token == false) {
@@ -53,7 +53,7 @@ app.post("/create", function (req, res) {
     let title = req.body.title
     let publicFlag = req.body.publicFlag
     let storyContent = req.body.storyContent
-    let date = req.body.date
+    let date = String(req.body.date)
 
     let newsStroyId = newsService.addNewsStory(author, title, publicFlag, storyContent, date)
     res.status(201).send({
@@ -82,7 +82,7 @@ app.patch("/editContent/:Id", function (req, res) {
     let author = req.body.author
     let storyContent = req.body.storyContent
 
-    newsService.updatestoryContent(newsStoryId, author,storyContent)
+    newsService.updatestoryContent(newsStoryId, author, storyContent)
     res.status(200).send({
         "Message": "NewsStory with Id: " + newsStoryId + " has been successfully updated",
         "Id": newsStoryId,
@@ -118,14 +118,17 @@ app.get("/search", function (req, res) {
 app.get('/logout', function (req, res) {
     let authorizationToken = req.headers["authorization"]
     tokens[authorizationToken] = false;
-    res.status(200).end()
+    res.status(200).send({
+        "Message": "Logged out",
+        "success": true
+    })
 })
 
 app.use(["/login", "/create", "/editTitle", "/editContent", "/search", "/delete", "/logout"], function (req, res) {
     throw "error405"
 })
 
-app.use("*", function(req, res) {
+app.use("*", function (req, res) {
     throw "error404"
 })
 
@@ -134,7 +137,7 @@ app.use(function (err, req, res, next) {
     if (err == "error400") {
         res.status(400).send({
             "Message": "Bad Request",
-            "Error": "400",
+            "Error": 400,
             "success": false
         })
     }
@@ -147,7 +150,7 @@ app.use(function (err, req, res, next) {
     if (err == "error401") {
         res.status(401).send({
             "Message": "Unauthorized",
-            "Error": "401",
+            "Error": 401,
             "success": false
         })
     }
@@ -199,7 +202,7 @@ app.use(function (err, req, res, next) {
     console.error(err.stack)
     res.status(500).send({
         "Message": "Internal Server Error",
-        "Error": "500",
+        "Error": 500,
         "success": false
     })
 })
