@@ -1,0 +1,197 @@
+<html>
+
+<head>
+    <title>View News</title>
+</head>
+
+<body onload="renderNewsPage()">
+    <div id="content"></div>
+    <script type="text/javascript">
+        function logout() {
+            fetch("/logout", {
+                headers: {
+                    "authorization": localStorage.authorizationToken,
+                    "Content-Type": "application/json"
+                }
+            }).then(function (resp) {
+                sessionStorage.clear()
+                redirectLogin()
+            })
+        }
+        function renderNewsPage() {
+            fetch("/search", {
+                headers: {
+                    "authorization": localStorage.authorizationToken,
+                    "Content-Type": "application/json"
+                }
+            }).then(function (response) {
+                if (response.status == 401)
+                    throw "error401"
+                if (response.status == 500)
+                    throw "error500"
+                return response.json()
+            }).then(function (payload) {
+                let content = `
+                    User Name: ${sessionStorage.username} </br>
+                    Role: ${sessionStorage.role} </br></br></br></br>
+                    `
+                sessionStorage.stories = JSON.stringify(payload['stories'])
+
+                for (story of payload['stories']) {
+                    if (sessionStorage.role == "guest") {
+                        if (story.publicFlag == "public")
+                            content += `<a href = '#' onclick=showNews(${story.id})> ${story.title} </a></br>`
+                        else
+                            content += story.title + '</br>'
+                    }
+                    else if (sessionStorage.role == "subscriber") {
+                        content += `<a href = '#' onclick=showNews(${story.id})> ${story.title} </a></br>`
+                    }
+                    else if (sessionStorage.role == "author") {
+                        if (story.publicFlag == "public" || story.author == sessionStorage.username)
+                            content += `<a href = '#' onclick=showNews(${story.id})> ${story.title} </a></br>`
+                        else
+                            content += story.title + '</br>'
+                    }
+                }
+                document.getElementById("content").innerHTML = content
+                if (sessionStorage.role == "author")
+                    document.getElementById("content").innerHTML += `<p><input type="submit" value='Create' onclick='renderCreateNewsForm()'></p>`
+                document.getElementById("content").innerHTML += `<p><input type="submit" value="logout" onclick="logout()"></p>`
+            }).catch(function (err) {
+                if (err == "error401")
+                    error401()
+                else
+                    error500()
+            })
+        }
+
+        function showNews(id) {
+            let story;
+
+            for (s of JSON.parse(sessionStorage.stories)) {
+                if (s.id == id) {
+                    story = s
+                    break
+                }
+            }
+            document.getElementById("content").innerHTML = `
+                    User Name: ${sessionStorage.username} </br>
+                    Role: ${sessionStorage.role} </br></br></br></br>
+                    <b> Title : </b> ${story.title} </br>
+                    <b> Author : </b> ${story.author} </br>
+                    <b> Content : </b> ${story.storyContent} </br>
+                    <b> Publication Date : </b> ${story.date} </br>
+                    <b> Content Visibility : </b> ${story.publicFlag} </br>
+                `
+            if (sessionStorage.role == "author" && sessionStorage.username == story.author)
+                document.getElementById("content").innerHTML += `<p><input type="button" value='Delete' onclick='deleteNews(${story.id})'></p>`
+
+            document.getElementById("content").innerHTML += `<p><input type="button" value="Go Back" onclick="renderNewsPage()"></p>`
+
+            document.getElementById("content").innerHTML += `<p><input type="button" value="Logout" onclick="logout()"></p>`
+        }
+
+        function deleteNews(id) {
+            fetch("/delete/" + id, {
+                headers: {
+                    "authorization": localStorage.authorizationToken,
+                    "Content-Type": "application/json"
+                },
+                method: "DELETE"
+            }).then(function (resp) {
+                if (resp.status == 401)
+                    throw "error401"
+                if (resp.status == 500)
+                    throw "error500"
+                renderNewsPage()
+            }).catch(function (err) {
+                if (err = "error401")
+                    error401()
+                else
+                    error500()
+            })
+        }
+
+        function createNews() {
+            let flag;
+            let publicFlag = document.getElementsByName("publicFlag")
+            for (i = 0; i < publicFlag.length; i++) {
+                if (publicFlag[i].checked)
+                    flag = publicFlag[i].value;
+            }
+
+            postBody = {
+                "author": document.getElementById("author").value,
+                "title": document.getElementById("title").value,
+                "publicFlag": flag,
+                "storyContent": document.getElementById("storyContent").value,
+                "date": document.getElementById("publicationDate").value
+            }
+            fetch("/create", {
+                headers: {
+                    "authorization": localStorage.authorizationToken,
+                    "Content-Type": "application/json"
+                },
+                method: "POST",
+                body: JSON.stringify(postBody)
+            }).then(function (resp) {
+                if (resp.status == 401)
+                    throw "error401"
+                if (resp.status == 500)
+                    throw "error500"
+                renderNewsPage()
+            }).catch(function (err) {
+                if (err == "error401")
+                    error401()
+                else
+                    error500()
+            })
+        }
+
+        function renderCreateNewsForm() {
+            document.getElementById("content").innerHTML = `
+                <form method="POST" onsubmit="createNews(); return false;">
+                    <label for="author">Author : </label>
+                    <input type="text" id="author" required><br/><br/>
+                    <label for="title">Title : </label>
+                    <input type="text" id="title" required><br/><br/>
+                    <label for="storyContent">Story Content : </label>
+                    <input type="text" id="storyContent" required><br/><br/>
+                    <label for="publicationDate">Publication Date</label>
+                    <input type="datetime-local" id="publicationDate" required><br/><br/>
+                    <label for="publicFlag">Public Flag</label>    
+                    <input type="radio" value="private" name="publicFlag" checked>
+                    <label for="private">Private</label>
+                    <input type="radio" value="public" name="publicFlag">
+                    <label for="public">Public</label><br/><br/>
+                    <input type="submit" value="Save">
+                </form>
+                <p>
+                    <input type="button" value="Cancel" onclick="renderNewsPage()">
+                </p>
+                `
+        }
+
+        function redirectLogin() {
+            window.location.href = "/"
+        }
+
+        function error500() {
+            document.getElementById("content").innerHTML = `
+                    <p>Something went wrong please click <a href = '#' onclick=renderNewsPage()>here</a> to continue</p>
+                `
+        }
+
+        function error401() {
+            document.getElementById("content").innerHTML = `
+                    <p>Unauthorized please click <a href = '#' onclick=redirectLogin()>here</a> to login</p>
+                `
+        }
+
+
+
+    </script>
+</body>
+
+</html>

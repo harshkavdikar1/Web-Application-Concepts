@@ -1,0 +1,69 @@
+<html>
+    <head>
+        <title>
+            Welcome Home!
+        </title>
+    </head>
+    <body onload="startLogin()">
+        <div id="content"></div>
+        <script type="text/javascript">
+            function login() {
+                let role;
+                let roles = document.getElementsByName("role")
+                for(i = 0; i < roles.length; i++) { 
+                    if(roles[i].checked) 
+                        role = roles[i].value;
+                }
+                var postData = JSON.stringify({
+                    "role": role,
+                    "password": document.getElementById("password").value,
+                    "username": document.getElementById("username").value
+                })
+                console.log(postData)
+                fetch("/login", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type':'application/json'
+                    },
+                    body: postData
+                }).then(resp => resp.json())
+                .then(resp => {
+                    localStorage.authorizationToken = resp["authorization"]
+                    sessionStorage.role = role
+                    sessionStorage.username = document.getElementById("username").value
+                    console.log(document.getElementById("username").value)
+                    console.log(sessionStorage.username)
+                    window.location.href = "/news"   
+                }).catch(err => {
+                    console.log(err)
+                    retryLogin()
+                })
+            }
+            function startLogin() {
+                document.getElementById("content").innerHTML = `
+                <form method="POST" onsubmit="login(); return false;"> 
+                    <label for="user">User Name : </label>
+                    <input type="text" required id="username"><br/><br/>
+                    <label for="user">Password : </label>
+                    <input type="password" id="password" required><br/><br/>
+                    <label for="user">Role : </label>
+                    <input type="radio" value="guest" name="role" checked>
+                    <label for="male">Guest</label>
+                    <input type="radio" value="subscriber" name="role">
+                    <label for="subscriber">Subscriber</label>
+                    <input type="radio" value="author" name="role">
+                    <label for="author">Author</label><br/><br/>
+                    <input type="submit" value="Login" >
+                </form>
+                `
+            }
+
+            function retryLogin() {
+                document.getElementById("content").innerHTML = `
+                    <h2>Error!! Invalid user name and password combination.</h2><br/>
+                    Click <a href="#" onclick=startLogin()> here </a> to login again.
+                `
+            }
+        </script>
+    </body>
+</html>

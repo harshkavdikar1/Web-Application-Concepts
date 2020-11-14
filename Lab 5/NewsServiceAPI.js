@@ -2,8 +2,6 @@ var express = require("express"),
     bodyParser = require("body-parser"),
     crypto = require('crypto');
 
-var hash = crypto.createHash('sha1')
-
 var db = require('./NewsService');
 
 var newsService = new db.NewsService();
@@ -15,18 +13,26 @@ app.use(bodyParser.json());
 
 var tokens = {}
 
+app.get("/", function(req, res) {
+    res.sendFile('/views/login.html', { root: __dirname });
+})
+
+app.get("/news", function(req, res) {
+    res.sendFile('/views/news.html', { root: __dirname });
+})
+
 app.post("/login", function (req, res) {
     if (req.body.username != req.body.password)
         throw "error401"
     else {
         var uniqueValue = req.body.username + Date.now()
-        var authorizationToken = hash.update(uniqueValue).digest('hex');
+        var authorizationToken = crypto.createHash('md5').update(uniqueValue).digest('hex');
         tokens[authorizationToken] = true;
         res.set("authorization", authorizationToken)
         res.status(200).send({
-            "Message": "Login Successfull",
+            "Message": "Login Successful",
             "authorization": authorizationToken,
-            "success": True
+            "success": true
         });
     }
 })
@@ -53,7 +59,7 @@ app.post("/create", function (req, res) {
     res.status(201).send({
         "Message": "News Story Created Successfully",
         "id": newsStroyId,
-        "success": True
+        "success": true
     })
 })
 
@@ -66,7 +72,7 @@ app.patch("/editTitle/:Id", function (req, res) {
     res.status(200).send({
         "Message": "NewsStory with Id: " + newsStoryId + " has been successfully updated",
         "Id": newsStoryId,
-        "success": True
+        "success": true
     })
 })
 
@@ -80,7 +86,7 @@ app.patch("/editContent/:Id", function (req, res) {
     res.status(200).send({
         "Message": "NewsStory with Id: " + newsStoryId + " has been successfully updated",
         "Id": newsStoryId,
-        "success": True
+        "success": true
     })
 })
 
@@ -90,7 +96,7 @@ app.delete("/delete/:Id", function (req, res) {
     res.status(200).send({
         "Message": "NewsStory with Id: " + newsStoryId + " has been successfully deleted",
         "Id": newsStoryId,
-        "success": True
+        "success": true
     })
 })
 
@@ -105,7 +111,7 @@ app.get("/search", function (req, res) {
 
     res.status(200).send({
         "stories": stories,
-        "success": True
+        "success": true
     })
 })
 
@@ -129,7 +135,7 @@ app.use(function (err, req, res, next) {
         res.status(400).send({
             "Message": "Bad Request",
             "Error": "400",
-            "success": False
+            "success": false
         })
     }
     else
@@ -142,7 +148,7 @@ app.use(function (err, req, res, next) {
         res.status(401).send({
             "Message": "Unauthorized",
             "Error": "401",
-            "success": False
+            "success": false
         })
     }
     else
@@ -155,7 +161,7 @@ app.use(function (err, req, res, next) {
         res.status(403).send({
             "Message": "Forbidden",
             "Error": 403,
-            "success": False
+            "success": false
         })
     }
     else
@@ -168,7 +174,7 @@ app.use(function (err, req, res, next) {
         res.status(404).send({
             "Message": "Resource Not Found",
             "Error": 404,
-            "success": False
+            "success": false
         })
     }
     else
@@ -181,7 +187,7 @@ app.use(function (err, req, res, next) {
         res.status(405).send({
             "Message": "Method not allowed",
             "Error": 405,
-            "success": False
+            "success": false
         })
     }
     else
@@ -194,7 +200,7 @@ app.use(function (err, req, res, next) {
     res.status(500).send({
         "Message": "Internal Server Error",
         "Error": "500",
-        "success": False
+        "success": false
     })
 })
 
