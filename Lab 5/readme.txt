@@ -1,3 +1,9 @@
+How to run the code:
+    1. From the root directory run :
+        npm install
+    2. Run the NewsServiceAPI.js file :
+        node NewsServiceAPI.js
+
 Authentication token has been created by concatinating username with current time stamp. Crypto library has been used to hash the concatinated string and create authorization token. 
 The token must be passed in the header as a key value pair ({authorization: authorizationToken}) every time while making request.
 
@@ -8,6 +14,12 @@ I have used NewsService from my lab2 submission with some modifications.
 External Libraries Used:
     1. body-parser
     2. express
+
+EC 1 Not Implemented
+EC 2 Implementation (along with regular submission):
+    1. The token is stored in localstorage so if a user closes a tab and directly tries to access websites he will be able to do it if it is within 3 min time frame.
+    2. Each news detailed info is stored in sessionStorage to reduce the number of calls to the server therefore this will not work if we are just clicking on the news
+        title to read the whole news story but apart from that it will work for every other functionality.
 
 API Endpoints:
     endpoint: /login
@@ -114,8 +126,3 @@ API Endpoints:
                 "Error": 500,
                 "success": false
             }
-
-Extra Credit 2 Implementation:
-    1. The token is stored in localstorage so if a user closes a tab and directly tries to access websites he will be able to do it if it is within 3 min time frame.
-    2. Each news detailed info is stored in sessionStorage to reduce the number of calls to the server therefore this will not work if we are just clicking on the news
-        title to read the whole news story but apart from that it will work for every other functionality.
