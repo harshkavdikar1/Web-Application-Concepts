@@ -27,7 +27,9 @@ app.post("/login", function (req, res) {
     else {
         var uniqueValue = req.body.username + Date.now()
         var authorizationToken = crypto.createHash('md5').update(uniqueValue).digest('hex');
-        tokens[authorizationToken] = true;
+        tokens[authorizationToken] = {};
+        tokens[authorizationToken]["active"] = true;
+        tokens[authorizationToken]["lastActive"] = new Date();
         res.set("authorization", authorizationToken)
         res.status(200).send({
             "Message": "Login Successful",
@@ -40,11 +42,16 @@ app.post("/login", function (req, res) {
 app.use(["/create", "/editTitle", "/editContent", "/search", "/delete", "/logout"], function (req, res, next) {
     let authorizationToken = req.headers["authorization"]
     let token = tokens[authorizationToken]
-    if (token == undefined || token == false) {
+    let currentTime = new Date()
+
+    if (token == undefined || token["active"] == false || (currentTime - token["lastActive"])/1000 > 300 ){
         throw "error401"
     }
-    else
+    else {
+        token["lastActive"] = currentTime
         next()
+    }
+        
 })
 
 app.post("/create", function (req, res) {
@@ -117,7 +124,7 @@ app.get("/search", function (req, res) {
 
 app.get('/logout', function (req, res) {
     let authorizationToken = req.headers["authorization"]
-    tokens[authorizationToken] = false;
+    delete tokens[authorizationToken]
     res.status(200).send({
         "Message": "Logged out",
         "success": true
