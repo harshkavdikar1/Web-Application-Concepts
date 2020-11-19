@@ -1,6 +1,5 @@
 var express = require("express"),
-    bodyParser = require("body-parser"),
-    crypto = require('crypto');
+    bodyParser = require("body-parser");
 
 var db = require('./NewsService');
 
@@ -40,13 +39,16 @@ app.patch("/news/:Id", function (req, res) {
     })
 })
 
-app.patch("/news/:Id", function (req, res) {
+app.put("/news/:Id", function (req, res) {
 
     let newsStoryId = req.params.Id
     let author = req.body.author
+    let title = req.body.title
+    let publicFlag = req.body.publicFlag
     let storyContent = req.body.storyContent
+    let date = String(req.body.date)
 
-    newsService.updatestoryContent(newsStoryId, author, storyContent)
+    newsService.updatestoryContent(newsStoryId, author, title, publicFlag, storyContent, date)
     res.status(200).send({
         "Message": "NewsStory with Id: " + newsStoryId + " has been successfully updated",
         "Id": newsStoryId,
@@ -78,6 +80,7 @@ app.get("/news", function (req, res) {
         "success": true
     })
 })
+
 app.get("/news/:Id", function (req, res) {
     let newsStoryId = req.params.Id
 
@@ -103,32 +106,6 @@ app.use(function (err, req, res, next) {
         res.status(400).send({
             "Message": "Bad Request",
             "Error": 400,
-            "success": false
-        })
-    }
-    else
-        next(err)
-})
-
-// 401 Error Handler
-app.use(function (err, req, res, next) {
-    if (err == "error401") {
-        res.status(401).send({
-            "Message": "Unauthorized",
-            "Error": 401,
-            "success": false
-        })
-    }
-    else
-        next(err)
-})
-
-// 403 Error Handler
-app.use(function (err, req, res, next) {
-    if (err == "error403") {
-        res.status(403).send({
-            "Message": "Forbidden",
-            "Error": 403,
             "success": false
         })
     }

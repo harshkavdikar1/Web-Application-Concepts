@@ -77,10 +77,6 @@ function NewsService() {
             throw "error404"
         }
 
-        if (this.NewsStories[id].author != author) {
-            throw "error403"
-        }
-
         this.NewsStories[id].title = title;
         writeDataToStore(this.NewsStories);
     };
@@ -115,29 +111,6 @@ function NewsService() {
             throw err;
         }
     };
-
-    /**
-     * Updates object of type NewsStory with the specified values
-     * @param  {Number} id              News Story Id
-     * @param  {String} author          author name
-     * @param  {String} storyContent    story content of news story
-     */
-    this.updatestoryContent = function (id, author, storyContent) {
-        if (author == undefined || storyContent == undefined) {
-            throw "error400"
-        }
-
-        if (id in this.NewsStories == false) {
-            throw "error404"
-        }
-
-        if (this.NewsStories[id].author != author) {
-            throw "error403"
-        }
-
-        this.NewsStories[id].storyContent = storyContent;
-        writeDataToStore(this.NewsStories);
-        }
 
     /**
      * Deletes the object NewsStory whose id is provided
@@ -186,6 +159,18 @@ function NewsService() {
         }
         return stories;
     };
+
+    /**
+     * Return the news story with a specific ID
+     * @param  {String} newsStoryId    News Story Id
+     * @return {Array}  News Story     Object of News Story which has the input Id
+     */
+    this.getNewsStoryWithId = function (newsStoryId) {
+        if (newsStoryId in this.NewsStories == false) {
+            throw "error404";
+        }
+        return this.NewsStories[newsStoryId];
+    }
 };
 
 module.exports = { NewsService };

@@ -1,51 +1,43 @@
-Login:
-    curl -d "username=author&password=author" -X POST http://localhost:3000/login
-
-The above request will return authorization token, copy it and replace authorizationToken with it in all the subsequest requests.
-
 Note: All the curl requests can be executed in one go just use the command at the end but replace authorizationToken with the token obtained by logging in
 
 Test Case 1: (Create News Story)
-    curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -H "authorization:authorizationToken" -X POST http://localhost:3000/create
+    curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -X POST http://localhost:3000/news
 
-    curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -H "authorization:authorizationToken" -X POST http://localhost:3000/create
+    curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -X POST http://localhost:3000/news
 
-    curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -H "authorization:authorizationToken" -X POST http://localhost:3000/create
+    curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -X POST http://localhost:3000/news
 
-    curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -H "authorization:authorizationToken" -X POST http://localhost:3000/create
+    curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -X POST http://localhost:3000/news
 
 Test Case 2: (Edit a story title)
-    curl -d "author=Author1&title=dummy updated title 1" -H "authorization:authorizationToken" -X PATCH http://localhost:3000/editTitle/1
+    curl -d "author=Author1&title=dummy updated title 1" -X PATCH http://localhost:3000/news/1
 
 Test Case 3: (Delete a story)
-    curl -H "authorization:authorizationToken" -X DELETE http://localhost:3000/delete/3
+    curl -X DELETE http://localhost:3000/news/3
 
 Test Case 4: (Delete a non existent story)
-    curl -H "authorization:authorizationToken" -X DELETE http://localhost:3000/delete/1000
+    curl -X DELETE http://localhost:3000/news/1000
 
 Test Case 5: (Search without any filter)
-    curl -H "authorization:authorizationToken" http://localhost:3000/search
+    curl http://localhost:3000/news
 
 Test Case 6: Search based on author
-    curl -H "authorization:authorizationToken" http://localhost:3000/search?author=Author1
+    curl http://localhost:3000/news?author=Author1
 
 Test Case 7: Search based on title (Here %20 corresponds to space between title and 1)
-    curl -H "authorization:authorizationToken" http://localhost:3000/search?title=title%201
+    curl http://localhost:3000/news?title=title%201
 
 Test Case 8: Search based on date range
-    curl -H "authorization:authorizationToken" "http://localhost:3000/search?startDate=2010-09-17&endDate=2014-01-01"
+    curl "http://localhost:3000/news?startDate=2010-09-17&endDate=2014-01-01"
 
 Test Case 9: Search on author and title
-    curl -H "authorization:authorizationToken" "http://localhost:3000/search?author=Author1&title=title%201&"
+    curl "http://localhost:3000/news?author=Author1&title=title%201&"
 
 Test Case 10: Search based on author, title and date range
-    curl -H "authorization:authorizationToken" "http://localhost:3000/search?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
-
-Logout:
-    curl -H "authorization:authorizationToken" http://localhost:3000/logout
+    curl "http://localhost:3000/news?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
 
 
 
 All Commands Bundled together:
 
-curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -H "authorization:authorizationToken" -X POST http://localhost:3000/create & curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -H "authorization:authorizationToken" -X POST http://localhost:3000/create & curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -H "authorization:authorizationToken" -X POST http://localhost:3000/create & curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -H "authorization:authorizationToken" -X POST http://localhost:3000/create & curl -d "author=Author1&title=dummy updated title 1" -H "authorization:authorizationToken" -X PATCH http://localhost:3000/editTitle/1 & curl -H "authorization:authorizationToken" -X DELETE http://localhost:3000/delete/3 & curl -H "authorization:authorizationToken" -X DELETE http://localhost:3000/delete/1000 & curl -H "authorization:authorizationToken" http://localhost:3000/search & curl -H "authorization:authorizationToken" http://localhost:3000/search?author=Author1 & curl -H "authorization:authorizationToken" http://localhost:3000/search?title=title%201 & curl -H "authorization:authorizationToken" "http://localhost:3000/search?startDate=2010-09-17&endDate=2014-01-01" & curl -H "authorization:authorizationToken" "http://localhost:3000/search?author=Author1&title=title%201&" & curl -H "authorization:authorizationToken" "http://localhost:3000/search?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
+curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy updated title 1" -X PATCH http://localhost:3000/news/1 & curl -X DELETE http://localhost:3000/news/3 & curl -X DELETE http://localhost:3000/news/1000 & curl http://localhost:3000/news & curl http://localhost:3000/news?author=Author1 & curl http://localhost:3000/news?title=title%201 & curl "http://localhost:3000/news?startDate=2010-09-17&endDate=2014-01-01" & curl "http://localhost:3000/news?author=Author1&title=title%201&" & curl "http://localhost:3000/news?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
