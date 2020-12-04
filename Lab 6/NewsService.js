@@ -85,32 +85,25 @@ function NewsService() {
      * Updates object of type NewsStory with the specified values
      * @param  {Number} id              News Story Id
      * @param  {String} author          author name
-     * @param  {String} title           title of news story
-     * @param  {String} publicFlag      flag of news story (public/private)
      * @param  {String} storyContent    story content of news story
-     * @param  {String} date            published date of news story
      */
-    this.updateStory = function (id, author, title, publicFlag, storyContent, date) {
-        try {
-            if (id in this.NewsStories == false) {
-                throw "error404"
-            }
-
-            if (author == undefined || title == undefined || publicFlag == undefined || storyContent == undefined || date == undefined) {
-                throw "error400"
-            }
-
-            this.NewsStories[id].author = author;
-            this.NewsStories[id].title = title;
-            this.NewsStories[id].storyContent = storyContent;
-            this.NewsStories[id].date = new Date(date);
-            this.NewsStories[id].publicFlag = publicFlag;
-            writeDataToStore(this.NewsStories);
+    this.updatestoryContent = function (id, author, storyContent) {
+        if (author == undefined || storyContent == undefined) {
+            throw "error400"
         }
-        catch (err) {
-            throw err;
+
+        if (id in this.NewsStories == false) {
+            throw "error404"
         }
-    };
+
+        if (this.NewsStories[id].author != author) {
+            throw "error403"
+        }
+
+        this.NewsStories[id].storyContent = storyContent;
+        writeDataToStore(this.NewsStories);
+    }
+
 
     /**
      * Deletes the object NewsStory whose id is provided

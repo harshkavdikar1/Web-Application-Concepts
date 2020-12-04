@@ -10,7 +10,7 @@ Test Case 1: (Create News Story)
     curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -X POST http://localhost:3000/news
 
 Test Case 2: (Edit a story title)
-    curl -d "author=Author1&title=dummy updated title 1" -X PATCH http://localhost:3000/news/1
+    curl -d "author=Author1&title=dummy updated title 1" -X PUT http://localhost:3000/news/1
 
 Test Case 3: (Delete a story)
     curl -X DELETE http://localhost:3000/news/3
@@ -36,8 +36,12 @@ Test Case 9: Search on author and title
 Test Case 10: Search based on author, title and date range
     curl "http://localhost:3000/news?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
 
+Test Case 11: (Search with News ID that exists)
+    curl http://localhost:3000/news/1
 
+Test Case 12: (Search with News ID that does not exist)
+    curl http://localhost:3000/news/10000
 
 All Commands Bundled together:
 
-curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy updated title 1" -X PATCH http://localhost:3000/news/1 & curl -X DELETE http://localhost:3000/news/3 & curl -X DELETE http://localhost:3000/news/1000 & curl http://localhost:3000/news & curl http://localhost:3000/news?author=Author1 & curl http://localhost:3000/news?title=title%201 & curl "http://localhost:3000/news?startDate=2010-09-17&endDate=2014-01-01" & curl "http://localhost:3000/news?author=Author1&title=title%201&" & curl "http://localhost:3000/news?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
+curl -d "author=Author1&title=dummy title 1&publicFlag=private&storyContent=dummy storyContent 1&date=2010-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy title 2&publicFlag=public&storyContent=dummy storyContent 2&date=2012-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 3&publicFlag=private&storyContent=dummy storyContent 3&date=2010-09-11" -X POST http://localhost:3000/news & curl -d "author=Author2&title=dummy title 4&publicFlag=public&storyContent=dummy storyContent 4&date=2011-09-18" -X POST http://localhost:3000/news & curl -d "author=Author1&title=dummy updated title 1" -X PUT http://localhost:3000/news/1 & curl -X DELETE http://localhost:3000/news/3 & curl -X DELETE http://localhost:3000/news/1000 & curl http://localhost:3000/news & curl http://localhost:3000/news?author=Author1 & curl http://localhost:3000/news?title=title%201 & curl "http://localhost:3000/news?startDate=2010-09-17&endDate=2014-01-01" & curl "http://localhost:3000/news?author=Author1&title=title%201&" & curl "http://localhost:3000/news?author=Author1&title=title%201&startDate=2010-09-17&endDate=2014-01-01"
